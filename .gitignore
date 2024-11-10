@@ -1,0 +1,2 @@
+# prevent compiled python files from being pushed to git
+/__pycache__
