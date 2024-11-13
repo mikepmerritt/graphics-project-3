@@ -15,12 +15,17 @@ from OpenGL.GLU import *
 from OpenGL.GL import *
 from utils import *
 from camera import *
+from PIL import Image
 
 # These parameters define the camera's lens shape
 CAM_NEAR = 0.01
 CAM_FAR = 1000.0
 CAM_ANGLE = 60.0
-
+floor_texture = None
+ball = None
+wall_texture = None
+table_top_texture = None 
+table_support_texture = None
 # These parameters define simple animation properties
 FPS = 60.0
 DELAY = int(1000.0 / FPS + 0.5)
@@ -44,13 +49,14 @@ class Light:
     def get_position_list(self):
         return [ self.position.x, self.position.y, self.position.z, 1.0 if self.is_point else 0.0 ]
 
-# first light is red, second is green, third is blue
+# first light is white, second is green, third is blue
 lights = [ 
     Light(
         GL_LIGHT0, 
-        ambient=[1.0, 0.0, 0.0, 1.0],
-        diffuse=[1.0, 0.0, 0.0, 1.0],
-        specular=[1.0, 0.0, 0.0, 1.0]
+        position=Point(0, 20, 0),
+        ambient=[1.0, 1.0, 1.0, 1.0],  
+        diffuse=[1.0, 1.0, 1.0, 1.0],
+        specular=[1.0, 1.0, 1.0, 1.0] 
     ), 
     Light(
         GL_LIGHT1,
@@ -79,7 +85,7 @@ def main():
     init()
     global camera
     camera = Camera(CAM_ANGLE, window_dimensions[0]/window_dimensions[1], CAM_NEAR, CAM_FAR)
-    camera.eye = Point(0, 5, 30)  # Position the camera
+    camera.eye = Point(0, 15, 40)  # Position the camera
     camera.look = Point(0, 0, 0)  # Look at the center of the scene
     camera.up = Vector(Point(0, 1, 0))  # Set up vector
 
@@ -90,7 +96,7 @@ def main():
 
 # Any initialization material to do...
 def init():
-    global tube, clock, running
+    global tube, clock, running, floor_texture, wall_texture, table_support_texture, table_top_texture, ball
 
     # pygame setup
     pygame.init()
@@ -98,11 +104,16 @@ def init():
     pygame.display.set_mode(window_dimensions, pygame.DOUBLEBUF|pygame.OPENGL)
     clock = pygame.time.Clock()
     running = True
-
+    ball = gluNewQuadric()
+    lights[0].enabled = True
+    wall_texture = load_texture("wall.jpg") 
+    table_top_texture = load_texture("table_top.jpg")
+    table_support_texture = load_texture("table_support.jpg")
     tube = gluNewQuadric()
-    gluQuadricDrawStyle(tube, GLU_LINE)
-
-    # Set up lighting and depth-test
+    gluQuadricDrawStyle(tube, GLU_FILL)
+    gluQuadricTexture(tube, GL_TRUE)
+    gluQuadricNormals(tube, GLU_SMOOTH) 
+    floor_texture = generate_checkerboard_texture(4, 4, 1, [[139, 69, 19, 255], [205, 133, 63, 255]]) 
     glEnable(GL_LIGHTING)
     glEnable(GL_NORMALIZE)    # Inefficient...
     glEnable(GL_DEPTH_TEST)   # For z-buffering!
@@ -142,7 +153,7 @@ def display():
     
     # Clear the Screen
     glClearColor(0.0, 0.0, 0.0, 1.0)
-    glClear(GL_COLOR_BUFFER_BIT)
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
 
     # And draw the "Scene"
@@ -274,7 +285,7 @@ def place_lights():
     """Set up the main lights."""
     global lights
 
-    amb = [ 0, 0, 0, 1.0 ]  # No ambient light initially
+    amb = [0.3, 0.3, 0.3, 1.0]   # No ambient light initially
     glLightModelfv(GL_LIGHT_MODEL_AMBIENT, amb)
 
     for index, light in enumerate(lights):
@@ -310,29 +321,325 @@ def place_lights():
 
 def draw():
     glPushMatrix()
-
     # TODO: add function calls here
-
+    draw_floor()
+    draw_walls()
+    draw_ceiling()
+    draw_side_table(-35, 0, -34)
+    draw_desk_lamp(-35, 8, -34)
     glPopMatrix()
+    
+def load_texture(file_name):
+    im = Image.open(file_name)
+    dim = 512  
+    size = (0,0,dim,dim)
+    texture = im.crop(size).tobytes("raw")
 
+    texture_name = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, texture_name)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, dim, dim, 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, texture)
+    return texture_name
+
+def generate_checkerboard_texture(nrows, ncols, block_size, block_colors):
+    color_size = len(block_colors[0])
+    if color_size != 4:
+        print("Error: Currently only RGBA supported here. Texture not generated.")
+        return None
+
+    texture = [0]*(nrows*ncols*block_size*block_size*color_size)
+    idx = 0
+    for i in range(nrows):
+        for ib in range(block_size):
+            for j in range(ncols):
+                color = block_colors[(i+j)%len(block_colors)]
+                for jb in range(block_size):
+                    for c in color:
+                        texture[idx] = c
+                        idx += 1
+
+    texture_name = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, texture_name)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                 ncols*block_size, 
+                 nrows*block_size, 
+                 0, GL_RGBA, 
+                 GL_UNSIGNED_BYTE, texture)
+    return texture_name
 #=======================================
 # Scene-drawing functions
 #=======================================
 
 def draw_floor():
-    pass
+    glPushMatrix()
+    
+    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.4, 0.4, 0.4, 1.0])  
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.6, 0.6, 0.6, 1.0])   
+    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.0, 0.0, 0.0, 1.0])  
+    glMaterialf(GL_FRONT, GL_SHININESS, 0.0)     
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, floor_texture)
+    
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    glBegin(GL_QUADS)
+    glNormal3f(0, 1, 0)  
+    glTexCoord2f(0, 0)
+    glVertex3f(-40, 0, -40)  
+    glTexCoord2f(8, 0)      
+    glVertex3f(40, 0, -40)   
+    glTexCoord2f(8, 8)      
+    glVertex3f(40, 0, 40)    
+    glTexCoord2f(0, 8)     
+    glVertex3f(-40, 0, 40)   
+    glEnd()
+    
+    glDisable(GL_TEXTURE_2D)
+    glPopMatrix()
+    
+def draw_wall(start_x, start_z, end_x, end_z, height, normal):
+    glBegin(GL_QUADS)
+    glNormal3f(*normal)  
+    glTexCoord2f(0, 0)
+    glVertex3f(start_x, 0, start_z)      
+    glTexCoord2f(4, 0)
+    glVertex3f(end_x, 0, end_z)          
+    glTexCoord2f(4, 2)
+    glVertex3f(end_x, height, end_z)      
+    glTexCoord2f(0, 2)
+    glVertex3f(start_x, height, start_z)  
+    glEnd()
+
+def apply_wall_material_and_texture():
+    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.4, 0.4, 0.4, 1.0])
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.6, 0.6, 0.6, 1.0])
+    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.0, 0.0, 0.0, 1.0])
+    glMaterialf(GL_FRONT, GL_SHININESS, 0.0)
+
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, wall_texture)
+    
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
 
 def draw_walls():
-    pass
+    glPushMatrix()
+    apply_wall_material_and_texture()
+    
+    height = 40
+    draw_wall(-40, -40, 40, -40, height, (0, 0, 1))    
+    draw_wall(40, -40, 40, 40, height, (-1, 0, 0))     
+    draw_wall(-40, 40, -40, -40, height, (1, 0, 0))   
+    draw_wall(40, 40, -40, 40, height, (0, 0, -1))   
+
+    glDisable(GL_TEXTURE_2D)
+    glPopMatrix()
 
 def draw_ceiling():
-    pass
+    glPushMatrix()
+    
+    apply_wall_material_and_texture()
+    glBegin(GL_QUADS)
+    glNormal3f(0, -1, 0)
+    glTexCoord2f(0, 0)
+    glVertex3f(-40, 40, -40)
+    glTexCoord2f(4, 0)
+    glVertex3f(40, 40, -40)
+    glTexCoord2f(4, 4)
+    glVertex3f(40, 40, 40)
+    glTexCoord2f(0, 4)
+    glVertex3f(-40, 40, 40)
+    glEnd()
 
+    glDisable(GL_TEXTURE_2D)
+    glPopMatrix()
+
+def draw_table_top(width, length):
+    thickness = 0.8 
+
+    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
+    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(GL_FRONT, GL_SHININESS, 10.0)
+
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, table_top_texture)
+    
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+    
+    glBegin(GL_QUADS)
+    glNormal3f(0, 1, 0)
+    glTexCoord2f(0, 0)
+    glVertex3f(-width/2, 0, -length/2)
+    glTexCoord2f(1, 0)
+    glVertex3f(width/2, 0, -length/2)
+    glTexCoord2f(1, 1)
+    glVertex3f(width/2, 0, length/2)
+    glTexCoord2f(0, 1)
+    glVertex3f(-width/2, 0, length/2)
+    
+    glNormal3f(0, -1, 0)
+    glTexCoord2f(0, 0)
+    glVertex3f(-width/2, -thickness, -length/2)
+    glTexCoord2f(1, 0)
+    glVertex3f(width/2, -thickness, -length/2)
+    glTexCoord2f(1, 1)
+    glVertex3f(width/2, -thickness, length/2)
+    glTexCoord2f(0, 1)
+    glVertex3f(-width/2, -thickness, length/2)
+    
+    glNormal3f(0, 0, 1)
+    glTexCoord2f(0, 0)
+    glVertex3f(-width/2, -thickness, length/2)
+    glTexCoord2f(1, 0)
+    glVertex3f(width/2, -thickness, length/2)
+    glTexCoord2f(1, thickness/2)
+    glVertex3f(width/2, 0, length/2)
+    glTexCoord2f(0, thickness/2)
+    glVertex3f(-width/2, 0, length/2)
+    
+    glNormal3f(0, 0, -1)
+    glTexCoord2f(0, 0)
+    glVertex3f(-width/2, -thickness, -length/2)
+    glTexCoord2f(1, 0)
+    glVertex3f(width/2, -thickness, -length/2)
+    glTexCoord2f(1, thickness/2)
+    glVertex3f(width/2, 0, -length/2)
+    glTexCoord2f(0, thickness/2)
+    glVertex3f(-width/2, 0, -length/2)
+    
+    glNormal3f(-1, 0, 0)
+    glTexCoord2f(0, 0)
+    glVertex3f(-width/2, -thickness, -length/2)
+    glTexCoord2f(1, 0)
+    glVertex3f(-width/2, -thickness, length/2)
+    glTexCoord2f(1, thickness/2)
+    glVertex3f(-width/2, 0, length/2)
+    glTexCoord2f(0, thickness/2)
+    glVertex3f(-width/2, 0, -length/2)
+    
+    glNormal3f(1, 0, 0)
+    glTexCoord2f(0, 0)
+    glVertex3f(width/2, -thickness, -length/2)
+    glTexCoord2f(1, 0)
+    glVertex3f(width/2, -thickness, length/2)
+    glTexCoord2f(1, thickness/2)
+    glVertex3f(width/2, 0, length/2)
+    glTexCoord2f(0, thickness/2)
+    glVertex3f(width/2, 0, -length/2)
+    glEnd()
+    
+    glDisable(GL_TEXTURE_2D)
+
+def draw_table_leg(height):
+    glPushMatrix()
+    
+    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
+    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(GL_FRONT, GL_SHININESS, 10.0)
+
+    glEnable(GL_TEXTURE_2D)
+    glBindTexture(GL_TEXTURE_2D, table_support_texture)
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    
+    glRotatef(-90, 1, 0, 0)
+    radius = 0.4
+    gluCylinder(tube, radius, radius, height, 32, 4)  
+    
+    glDisable(GL_TEXTURE_2D)
+    glPopMatrix()
+    
 def draw_side_table(x, y, z):
-    pass
+    glPushMatrix()
+    glTranslatef(x, y, z)    
+    height = 8
+    width = 8 
+    length = 6
+    
+    glPushMatrix()
+    glTranslatef(-width/2 + 1, 0, -length/2 + 1)
+    draw_table_leg(height)
+    glPopMatrix()
+    
+    glPushMatrix()
+    glTranslatef(width/2 - 1, 0, -length/2 + 1)
+    draw_table_leg(height)
+    glPopMatrix()
+    
+    glPushMatrix()
+    glTranslatef(-width/2 + 1, 0, length/2 - 1)
+    draw_table_leg(height)
+    glPopMatrix()
+    
+    glPushMatrix()
+    glTranslatef(width/2 - 1, 0, length/2 - 1)
+    draw_table_leg(height)
+    glPopMatrix()
+    
+    glPushMatrix()
+    glTranslatef(0, height, 0)
+    draw_table_top(width, length)
+    glPopMatrix()
+    
+    glPopMatrix()
+
+def draw_lamp_base(radius):
+    glPushMatrix()
+    glRotatef(-90, 1, 0, 0)
+    base_height = 0.1 
+    gluCylinder(tube, radius, radius, base_height, 32, 1)
+    gluDisk(tube, 0, radius, 32, 1)  
+    glTranslatef(0, 0, base_height)
+    gluDisk(tube, 0, radius, 32, 1)
+    glPopMatrix()
+
+def draw_lamp_pole(height, radius):
+    glPushMatrix()
+    glRotatef(-90, 1, 0, 0)
+    gluCylinder(tube, radius, radius, height, 16, 1)
+    glPopMatrix()
+
+def draw_lamp_head(radius, height):
+    glPushMatrix()
+    glRotatef(90, 1, 0, 0)
+    gluCylinder(tube, radius, radius, height, 32, 1)
+    gluDisk(tube, 0, radius, 32, 1)
+    glTranslatef(0, 0, height)
+    gluDisk(tube, 0, radius, 32, 1)
+    glPopMatrix()
 
 def draw_desk_lamp(x, y, z):
-    pass
+    glPushMatrix()
+    glTranslatef(x, y, z)
+    base_radius = 0.8
+    draw_lamp_base(base_radius)
+
+    pole_height = 4.0
+    pole_radius = 0.1
+    draw_lamp_pole(pole_height, pole_radius)
+    
+    glTranslatef(0, pole_height, 0)
+    head_radius = 1.2
+    head_height = 0.8
+    draw_lamp_head(head_radius, head_height)
+    
+    glPopMatrix()
 
 def draw_die(x, y, z):
     # will likely need to call more than once
