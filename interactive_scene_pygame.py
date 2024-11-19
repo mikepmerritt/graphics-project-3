@@ -39,10 +39,21 @@ DELAY = int(1000.0 / FPS + 0.5)
 # Light state machine
 class Light:
     # constructor
-    def __init__(self, gl_light_name, position=Point(0, 10, 0), enabled=False, ambient=[1.0, 1.0, 1.0, 1.0], diffuse=[1.0, 1.0, 1.0, 1.0], specular=[1.0, 1.0, 1.0, 1.0], is_point=True):
+    def __init__(
+        self, 
+        gl_light_name, 
+        position=Point(0, 10, 0), 
+        enabled=False, 
+        ambient=[1.0, 1.0, 1.0, 1.0], 
+        diffuse=[1.0, 1.0, 1.0, 1.0], 
+        specular=[1.0, 1.0, 1.0, 1.0], 
+        is_point=True,
+        display_ball=True
+    ):
+        self.gl_light_name = gl_light_name
         self.enabled = enabled
         self.is_point = is_point
-        self.gl_light_name = gl_light_name
+        self.display_ball = display_ball
 
         # copy arrays / objects to prevent aliasing
         self.position = copy.deepcopy(position)
@@ -55,29 +66,70 @@ class Light:
     def get_position_list(self):
         return [ self.position.x, self.position.y, self.position.z, 1.0 if self.is_point else 0.0 ]
 
-# first light is white, second is green, third is blue
+# TODO: order is flashlight, overhead red, overhead green, overhead blue, hanging light (50% yellow) + flicker, desk lamp (75% white)
 lights = [ 
+    # Debug light in the center of the room with pure white, used to test textures and whatnot
+    # TODO: replace with flashlight position
     Light(
         GL_LIGHT0, 
-        position=Point(0, 20, 0),
+        position=Point(0, 0, 0),
+        enabled=False,
         ambient=[1.0, 1.0, 1.0, 1.0],  
         diffuse=[1.0, 1.0, 1.0, 1.0],
         specular=[1.0, 1.0, 1.0, 1.0] 
-    ), 
+    ),
+    # Red light in far-left quarter of room
     Light(
-        GL_LIGHT1,
-        ambient=[0.0, 1.0, 0.0, 1.0],
+        GL_LIGHT1, 
+        position=Point(20, 40, -20),
+        enabled=False,
+        ambient=[1.0, 0.0, 0.0, 1.0],  
+        diffuse=[1.0, 0.0, 0.0, 1.0],
+        specular=[1.0, 0.0, 0.0, 1.0],
+        display_ball=True
+    ),
+    # Green light in left-center area of room
+    Light(
+        GL_LIGHT2, 
+        position=Point(-20, 40, 0),
+        enabled=False,
+        ambient=[0.0, 1.0, 0.0, 1.0],  
         diffuse=[0.0, 1.0, 0.0, 1.0],
-        specular=[0.0, 1.0, 0.0, 1.0]
-    ), 
+        specular=[0.0, 1.0, 0.0, 1.0],
+        display_ball=True
+    ),
+    # Blue light in close-right quarter of room
     Light(
-        GL_LIGHT2,
-        ambient=[0.0, 0.0, 1.0, 1.0],
+        GL_LIGHT3, 
+        position=Point(20, 40, 20),
+        enabled=False,
+        ambient=[0.0, 0.0, 1.0, 1.0],  
         diffuse=[0.0, 0.0, 1.0, 1.0],
-        specular=[0.0, 0.0, 1.0, 1.0]
-    ) 
+        specular=[0.0, 0.0, 1.0, 1.0],
+        display_ball=True
+    ),
+
+    # Hanging light in center of the room
+    Light(
+        GL_LIGHT4, 
+        position=Point(0, 30, 0),
+        enabled=False,
+        ambient=[0.5, 0.5, 0.0, 1.0],  
+        diffuse=[0.5, 0.5, 0.0, 1.0],
+        specular=[0.5, 0.5, 0.0, 1.0],
+        display_ball=True
+    ),
+    # Lamp in far right-corner of room
+    Light(
+        GL_LIGHT5, 
+        position=Point(-32, 11.2, -36), # lamp y-value is 8 + 4 - 1/2 (1.6) (table height + pole height + 1/2 shade height)
+        enabled=False,
+        ambient=[0.75, 0.75, 0.75, 1.0],  
+        diffuse=[0.75, 0.75, 0.75, 1.0],
+        specular=[0.75, 0.75, 0.75, 1.0],
+        display_ball=True
+    ),
 ]
-active_light = -1
 
 # Global (Module) Variables
 
@@ -111,7 +163,6 @@ def init():
     clock = pygame.time.Clock()
     running = True
     ball = gluNewQuadric()
-    lights[0].enabled = True
     wall_texture = load_texture("wall.jpg") 
     table_top_texture = load_texture("table_top.jpg")
     table_support_texture = load_texture("table_support.jpg")
@@ -193,15 +244,12 @@ def advance():
 # Function used to handle any key events
 # event: The keyboard event that happened
 def keyboard(event):
-    global running, animate, viewAngle, spinAngle, active_light, dice_animating
+    global running, animate, viewAngle, spinAngle, dice_animating
     key = event.key # "ASCII" value of the key pressed
     if key == 27:  # ASCII code 27 = ESC-key
         running = False
     elif key == ord(' '):
-        if active_light != -1:
-            lights[active_light].enabled = not lights[active_light].enabled
-        else:
-            animate = not animate
+        animate = not animate
     elif key == ord('w'):
         # Go forward
         camera.slide(0,0,-1)
@@ -226,59 +274,27 @@ def keyboard(event):
     elif key == ord('x'):
         # Rotate camera down
         camera.tilt(-1)
-    elif key == ord('j'):
-        # Move light left (global coordinates)
-        if active_light != -1:
-            lights[active_light].position.x -= 0.1
-    elif key == ord('l'):
-        # Move light right (global coordinates)
-        if active_light != -1:
-            lights[active_light].position.x += 0.1
-    elif key == ord('i'):
-        # Move light forward (global coordinates)
-        if active_light != -1:
-            lights[active_light].position.z -= 0.1
-    elif key == ord('k'):
-        # Move light backward (global coordinates)
-        if active_light != -1:
-            lights[active_light].position.z += 0.1
-    elif key == ord('u'):
-        # Move light up (global coordinates)
-        if active_light != -1:
-            lights[active_light].position.y += 0.1
-    elif key == ord('o'):
-        # Move light down (global coordinates)
-        if active_light != -1:
-            lights[active_light].position.y -= 0.1
-    elif key == ord('p'):
-        # Print values of light
-        print('Light location: {0}'.format(
-            lights[active_light].position if (active_light != -1) else 'N/A'
-        ))
+    elif key == ord('h'):
+        # Output help message to the console
+        print_help_message()
     elif key == ord('0'):
-        # Select light 0
-        if active_light == 0:
-            active_light = -1
-            print("No light selected.")
-        else:
-            active_light = 0
-            print("Select light 0.")
+        # Toggle activation of light 0
+        lights[0].enabled = not lights[0].enabled
     elif key == ord('1'):
-        # Select light 1
-        if active_light == 1:
-            active_light = -1
-            print("No light selected.")
-        else:
-            active_light = 1
-            print("Select light 1.")
+        # Toggle activation of light 1
+        lights[1].enabled = not lights[1].enabled
     elif key == ord('2'):
-        # Select light 2
-        if active_light == 2:
-            active_light = -1
-            print("No light selected.")
-        else:
-            active_light = 2
-            print("Select light 2.")
+        # Toggle activation of light 2
+        lights[2].enabled = not lights[2].enabled
+    elif key == ord('3'):
+        # Toggle activation of light 3
+        lights[3].enabled = not lights[3].enabled
+    elif key == ord('4'):
+        # Toggle activation of light 4
+        lights[4].enabled = not lights[4].enabled
+    elif key == ord('5'):
+        # Toggle activation of light 5
+        lights[5].enabled = not lights[5].enabled
     elif key == ord('6'):
         if not dice_animating:
             dice_animating = True
@@ -326,17 +342,14 @@ def place_lights():
             glEnable(light.gl_light_name)
 
             # This part draws a SELF-COLORED sphere (in spot where light is!)
-            glPushMatrix()
-            glTranslatef(light.position.x, light.position.y, light.position.z)
-            glDisable(GL_LIGHTING)
-            glColor3f(
-                1 if index == 0 else 0,
-                1 if index == 1 else 0,
-                1 if index == 2 else 0
-            ) # Colored sphere
-            gluSphere(ball, 0.2, 100, 100)
-            glEnable(GL_LIGHTING)
-            glPopMatrix()
+            if (light.display_ball):
+                glPushMatrix()
+                glTranslatef(light.position.x, light.position.y, light.position.z)
+                glDisable(GL_LIGHTING)
+                glColor3f(light.ambient[0], light.ambient[1], light.ambient[2]) # Colored sphere
+                gluSphere(ball, 0.2, 100, 100)
+                glEnable(GL_LIGHTING)
+                glPopMatrix()
 
 def draw():
     glPushMatrix()
@@ -386,6 +399,7 @@ def generate_checkerboard_texture(nrows, ncols, block_size, block_colors):
                  0, GL_RGBA, 
                  GL_UNSIGNED_BYTE, texture)
     return texture_name
+
 #=======================================
 # Scene-drawing functions
 #=======================================
@@ -877,24 +891,31 @@ def draw_dice(x, y, z):
     draw_single_dice(x, y, z, 0.2, dice_rotation)
     draw_single_dice(x + 1.2, y, z + 0.3, 0.2, dice_rotation2)
 
+# TODO: implement
 def draw_pool_table(x, y, z):
     pass
 
+# TODO: implement
 def draw_billiard_ball(x, y, z, num):
     pass
 
+# TODO: implement
 def draw_cue_ball(x, y, z):
     pass
 
+# TODO: implement
 # TODO: uncertain if lights should have functions or be included in place_lights instead
 def draw_hanging_spotlight(x, y, z):
     # may need additional parameters for swinging
     pass
 
+# TODO: implement
 def draw_wall_picture(x, y, z):
     pass
 
+# TODO: implement
 def print_help_message():
+    print(camera)
     pass
 
 #=======================================
