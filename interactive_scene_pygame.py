@@ -214,24 +214,18 @@ def keyboard(event):
     elif key == ord('d'):
         # Go right (relative to camera)
         camera.slide(-1,0,0)
-    elif key == ord('z'):
+    elif key == ord('q'):
         # Turn camera left (counter-clockwise)
         camera.turn(1)
-    elif key == ord('x'):
+    elif key == ord('e'):
         # Turn camera right (clockwise)
         camera.turn(-1)
-    elif key == ord('q'):
-        # Go up
-        camera.slide(0,1,0)
-    elif key == ord('e'):
-        # Go down
-        camera.slide(0,-1,0)
-    elif key == pygame.K_LEFT:
-        # turn world left
-        viewAngle += 1
-    elif key == pygame.K_RIGHT:
-        # turn world right
-        viewAngle -= 1
+    elif key == ord('z'):
+        # Rotate camera up
+        camera.tilt(1)
+    elif key == ord('x'):
+        # Rotate camera down
+        camera.tilt(-1)
     elif key == ord('j'):
         # Move light left (global coordinates)
         if active_light != -1:
@@ -298,6 +292,7 @@ def draw_scene():
     # Place the camera
     glMatrixMode(GL_MODELVIEW);
     camera.placeCamera()
+    # print(camera)
     
     # Now transform the world
     glColor3f(1, 1, 1)

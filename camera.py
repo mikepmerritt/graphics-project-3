@@ -16,7 +16,7 @@ from utils import *
 class Camera:
     """A simple 3D Camera System"""
 
-    def __init__(self, camAngle=45, aspRatio=1, near=0.1, far=1000, eye=Point(0,0,0), lookAngle=0):
+    def __init__(self, camAngle=45, aspRatio=1, near=0.1, far=1000, eye=Point(0,0,0), lookAngle=0, pitchAngle=0):
         """A constructor for Camera class using initial default values.
            eye is a Point
            lookAngle is the angle that camera is looking in measured in degrees
@@ -27,10 +27,11 @@ class Camera:
         self.far = far
         self.eye = eye
         self.lookAngle = lookAngle
+        self.pitchAngle = pitchAngle
 
     def __str__(self):
         """Basic string representation of this Camera"""
-        return "Camera Eye at %s with angle (%f)"%(self.eye, self.lookAngle)
+        return "Camera Eye at %s with angle (%f) and pitch (%f)"%(self.eye, self.lookAngle, self.pitchAngle)
 
     def setProjection(self):
         glMatrixMode(GL_PROJECTION);
@@ -44,8 +45,9 @@ class Camera:
 
         # Compute the look at point based on the turn angle
         rad = math.radians(self.lookAngle)
+        pitch_rad = math.radians(self.pitchAngle)
         lookX = self.eye.x - math.sin(rad)
-        lookY = self.eye.y
+        lookY = self.eye.y - math.sin(pitch_rad)
         lookZ = self.eye.z - math.cos(rad)
 
         # Place the camera
@@ -79,4 +81,15 @@ class Camera:
         self.lookAngle += angle
         if self.lookAngle < 0: self.lookAngle += 360  # Just to wrap around
         elif self.lookAngle >= 360: self.lookAngle -= 360  # Just to wrap around
+
+    def tilt(self, angle):
+        """ Tilt the camera by the given angle. Modifies the pitch (up/down rotation). """
+        resultant_angle = self.pitchAngle + angle
+        
+        # clamping the angle between -90 and 90
+        # TODO: determine if this is the correct way to do this
+        resultant_angle = min(90, resultant_angle)
+        resultant_angle = max(-90, resultant_angle)
+
+        self.pitchAngle = resultant_angle
         
