@@ -395,7 +395,7 @@ def draw():
     draw_desk_lamp(-32, 8, -36)
     draw_dice(-37, 8.22, -34)
     draw_hanging_spotlight(0, 40, 0)
-    draw_pool_table(0, 0, 0)
+    draw_pool_table(0, 5, 0)
     glPopMatrix()
     
 def load_texture(file_name):
@@ -930,7 +930,41 @@ def draw_dice(x, y, z):
 
 # TODO: implement
 def draw_pool_table(x, y, z):
-    draw_rect(x, y, z, 3, 2, 4, felt_texture)
+    # corners (3 x 2 x 3) # floor should be at midpoint level, hole extends down
+
+    # middles (3 x 2 x 3) # floor should be at midpoint level, hole extends down
+
+    # x-aligned wood segments (5 x 2 x 1)
+    draw_rect(x - 4, y + 5, z - 4.5, 5, 2, 1, table_support_texture)
+    draw_rect(x + 4, y + 5, z - 4.5, 5, 2, 1, table_support_texture)
+    draw_rect(x - 4, y + 5, z + 4.5, 5, 2, 1, table_support_texture)
+    draw_rect(x + 4, y + 5, z + 4.5, 5, 2, 1, table_support_texture)
+
+    # x-aligned felt segments (5 x 2 x 1)
+    draw_rect(x - 4, y + 5, z - 3.5, 5, 2, 1, felt_texture)
+    draw_rect(x + 4, y + 5, z - 3.5, 5, 2, 1, felt_texture)
+    draw_rect(x - 4, y + 5, z + 3.5, 5, 2, 1, felt_texture)
+    draw_rect(x + 4, y + 5, z + 3.5, 5, 2, 1, felt_texture)
+
+    # z-aligned wood segments (1 x 2 x 4)
+    draw_rect(x - 9, y + 5, z, 1, 2, 4, table_support_texture)
+    draw_rect(x + 9, y + 5, z, 1, 2, 4, table_support_texture)
+
+    # z-aligned felt segments (1 x 2 x 4)
+    draw_rect(x - 8, y + 5, z, 1, 2, 4, felt_texture)
+    draw_rect(x + 8, y + 5, z, 1, 2, 4, felt_texture)
+
+    # felt play area (15 x 1 x 6)
+    draw_rect(x, y + 4.5, z, 15, 1, 6, felt_texture)
+
+    # wood bottom middle (19 x 1 x 6)
+    draw_rect(x, y + 3.5, z, 19, 1, 10, table_support_texture)
+
+    # wood legs (3 x 8 x 3)
+    draw_rect(x - 6, y, z - 2.5, 3, 8, 3, table_support_texture)
+    draw_rect(x + 6, y, z - 2.5, 3, 8, 3, table_support_texture)
+    draw_rect(x - 6, y, z + 2.5, 3, 8, 3, table_support_texture)
+    draw_rect(x + 6, y, z + 2.5, 3, 8, 3, table_support_texture)
 
 def draw_plane(x_size, y_size, texture):
     """ Draw a textured plane of the specified dimension.
