@@ -22,16 +22,27 @@ import random
 CAM_NEAR = 0.01
 CAM_FAR = 1000.0
 CAM_ANGLE = 60.0
-floor_texture = None
+
+# quadrics used for curved shapes
+tube = None
 ball = None
+disk = None
+
+# textures
+floor_texture = None
 wall_texture = None
 table_top_texture = None 
 table_support_texture = None
 lamp_support_texture = None
 lamp_head_texture = None
+aluminum_light_texture = None
+aluminum_dark_texture = None
+
+# scene-specific state information
 dice_animating = False
 dice_rotation = [0, 0, 0] 
 dice_rotation2 = [0, 0, 0]
+
 # These parameters define simple animation properties
 FPS = 60.0
 DELAY = int(1000.0 / FPS + 0.5)
@@ -154,7 +165,12 @@ def main():
 
 # Any initialization material to do...
 def init():
-    global tube, clock, running, floor_texture, wall_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, ball
+    # state information
+    global clock, running
+    # quadrics
+    global tube, ball, disk
+    # textures
+    global floor_texture, wall_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture
 
     # pygame setup
     pygame.init()
@@ -162,17 +178,34 @@ def init():
     pygame.display.set_mode(window_dimensions, pygame.DOUBLEBUF|pygame.OPENGL)
     clock = pygame.time.Clock()
     running = True
-    ball = gluNewQuadric()
+
+    # loading / generating textures
     wall_texture = load_texture("wall.jpg") 
     table_top_texture = load_texture("table_top.jpg")
     table_support_texture = load_texture("table_support.jpg")
     lamp_support_texture = load_texture("lamp_support.jpg")
     lamp_head_texture = load_texture("lamp_head.jpg")
+    aluminum_dark_texture = load_texture("HangingLamp_Dark.jpg")
+    aluminum_light_texture = load_texture("HangingLamp_Light.jpg")
+    floor_texture = generate_checkerboard_texture(4, 4, 1, [[139, 69, 19, 255], [205, 133, 63, 255]]) 
+
+    # loading / creating quadrics
     tube = gluNewQuadric()
     gluQuadricDrawStyle(tube, GLU_FILL)
     gluQuadricTexture(tube, GL_TRUE)
     gluQuadricNormals(tube, GLU_SMOOTH) 
-    floor_texture = generate_checkerboard_texture(4, 4, 1, [[139, 69, 19, 255], [205, 133, 63, 255]]) 
+
+    ball = gluNewQuadric()
+    gluQuadricDrawStyle(ball, GLU_FILL)
+    gluQuadricTexture(ball, GL_TRUE)
+    gluQuadricNormals(ball, GLU_SMOOTH) 
+
+    disk = gluNewQuadric()
+    gluQuadricDrawStyle(disk, GLU_FILL)
+    gluQuadricTexture(disk, GL_TRUE)
+    gluQuadricNormals(disk, GLU_SMOOTH) 
+
+    # OpenGL setup
     glEnable(GL_LIGHTING)
     glEnable(GL_NORMALIZE)    # Inefficient...
     glEnable(GL_DEPTH_TEST)   # For z-buffering!
@@ -209,11 +242,10 @@ def display():
     glViewport(0, 0, win_width, win_height)
 
     camera.setProjection()
-    
+
     # Clear the Screen
     glClearColor(0.0, 0.0, 0.0, 1.0)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-
 
     # And draw the "Scene"
     glColor3f(1.0, 1.0, 1.0)
@@ -360,6 +392,7 @@ def draw():
     draw_side_table(-35, 0, -34)
     draw_desk_lamp(-32, 8, -36)
     draw_dice(-37, 8.22, -34)
+    draw_hanging_spotlight(0, 40, 0)
     glPopMatrix()
     
 def load_texture(file_name):
@@ -654,9 +687,9 @@ def draw_lamp_base(radius):
     base_height = 0.1 
     gluQuadricTexture(tube, GL_TRUE)
     gluCylinder(tube, radius, radius, base_height, 32, 1)
-    gluDisk(tube, 0, radius, 32, 1)  
+    gluDisk(disk, 0, radius, 32, 1)  
     glTranslatef(0, 0, base_height)
-    gluDisk(tube, 0, radius, 32, 1)
+    gluDisk(disk, 0, radius, 32, 1)
     
     glDisable(GL_TEXTURE_2D)
     glPopMatrix()
@@ -705,9 +738,9 @@ def draw_lamp_head(radius, height):
     glRotatef(90, 1, 0, 0)
     gluQuadricTexture(tube, GL_TRUE)
     gluCylinder(tube, radius, radius, height, 32, 1)
-    gluDisk(tube, 0, radius, 32, 1)
+    gluDisk(disk, 0, radius, 32, 1)
     glTranslatef(0, 0, height)
-    gluDisk(tube, 0, radius, 32, 1)
+    gluDisk(disk, 0, radius, 32, 1)
     
     glDisable(GL_TEXTURE_2D)
     glPopMatrix()
@@ -721,6 +754,7 @@ def draw_desk_lamp(x, y, z):
     pole_height = 4.0
     pole_radius = 0.1
     draw_lamp_pole(pole_height, pole_radius)
+    
     
     glTranslatef(0, pole_height, 0)
     head_radius = 1.2
@@ -903,11 +937,74 @@ def draw_billiard_ball(x, y, z, num):
 def draw_cue_ball(x, y, z):
     pass
 
-# TODO: implement
+# TODO: implement swinging
 # TODO: uncertain if lights should have functions or be included in place_lights instead
 def draw_hanging_spotlight(x, y, z):
     # may need additional parameters for swinging
-    pass
+    glPushMatrix()
+    glTranslatef(x, y, z)
+
+    pole_radius = 0.25
+    pole_height = 5
+
+    upper_lamp_radius = 2
+    lower_lamp_radius = 5
+    lamp_height = 5
+
+    # prepare the texture for the hanging lamp pole
+    glBindTexture(GL_TEXTURE_2D, aluminum_light_texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)           # try GL_NICEST/GL_FASTEST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_LINEAR/GL_NEAREST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+
+    # drawing the hanging light pole
+    glTranslatef(0, -pole_height, 0)
+    glRotatef(-90, 1, 0, 0)
+    set_aluminum(GL_FRONT_AND_BACK)
+    # parameters are: quadric, base radius, height radius, height, slices, stacks
+    gluCylinder(tube, pole_radius, pole_radius, pole_height, 30, 10)
+    glRotatef(90, 1, 0, 0)
+
+    # Disabling texturing mode to switch texture
+    glDisable(GL_TEXTURE_2D)
+
+    # prepare the texture for the hanging lamp shade
+    glBindTexture(GL_TEXTURE_2D, aluminum_dark_texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)           # try GL_NICEST/GL_FASTEST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_LINEAR/GL_NEAREST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+
+    # draw a circle for the top of the lamp shade
+    # parameters are: quadric, inner radius (imagine a donut), outer radius, slices, and rings
+    # TODO: determine if this should be done manually
+    glRotatef(-90, 1, 0, 0)
+    set_aluminum(GL_FRONT_AND_BACK)
+    gluDisk(disk, 0, upper_lamp_radius, 30, 10)
+    glRotate(90, 1, 0, 0)
+
+    # drawing the hanging light shade
+    glTranslatef(0, -lamp_height, 0)
+    glRotatef(-90, 1, 0, 0)
+    set_aluminum(GL_FRONT_AND_BACK)
+    gluCylinder(tube, lower_lamp_radius, upper_lamp_radius, lamp_height, 30, 10)
+    glRotatef(90, 1, 0, 0)
+
+    # Disabling texturing mode
+    glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
 
 # TODO: implement
 def draw_wall_picture(x, y, z):
@@ -917,6 +1014,24 @@ def draw_wall_picture(x, y, z):
 def print_help_message():
     print(camera)
     pass
+
+#=======================================
+# Material Property Functions
+#=======================================
+
+# helper method to set the material properties for a given face to match an aluminum surface
+#   properties derived from: https://people.eecs.ku.edu/~jrmiller/Courses/672/InClass/3DLighting/MaterialProperties.html
+#   specifically the one for silver
+# face will be either GL_FRONT, GL_BACK, or GL_FRONT_AND_BACK
+def set_aluminum(face):
+    ambient = [ 0.19225, 0.19225, 0.19225, 1.0 ]
+    diffuse = [ 0.50754, 0.50754, 0.50754, 1.0 ]
+    specular = [ 0.508273, 0.508273, 0.508273, 1.0 ]
+    shininess = 51.2
+    glMaterialfv(face, GL_AMBIENT, ambient);
+    glMaterialfv(face, GL_DIFFUSE, diffuse);
+    glMaterialfv(face, GL_SPECULAR, specular);
+    glMaterialf(face, GL_SHININESS, shininess);
 
 #=======================================
 # Direct OpenGL Matrix Operation Examples

@@ -46,11 +46,12 @@ class Camera:
         # Compute the look at point based on the turn angle
         rad = math.radians(self.lookAngle)
         pitch_rad = math.radians(self.pitchAngle)
-        lookX = self.eye.x - math.sin(rad)
+        lookX = self.eye.x - math.sin(rad) * math.cos(pitch_rad)
         lookY = self.eye.y - math.sin(pitch_rad)
-        lookZ = self.eye.z - math.cos(rad)
+        lookZ = self.eye.z - math.cos(rad) * math.cos(pitch_rad)
 
         # Place the camera
+        # TODO: To fix the 90 degree pitch issues, need to update the up vector as we go
         gluLookAt(self.eye.x, self.eye.y, self.eye.z,  # Camera's origin
                   lookX, lookY, lookZ,                 # Camera's look at point
                   0, 1, 0)                             # Camera is always oriented vertically
@@ -86,10 +87,11 @@ class Camera:
         """ Tilt the camera by the given angle. Modifies the pitch (up/down rotation). """
         resultant_angle = self.pitchAngle + angle
         
+        # TODO: if updating up axis, can support 90 degree angles
         # clamping the angle between -90 and 90
         # TODO: determine if this is the correct way to do this
-        resultant_angle = min(90, resultant_angle)
-        resultant_angle = max(-90, resultant_angle)
+        resultant_angle = min(89, resultant_angle)
+        resultant_angle = max(-89, resultant_angle)
 
         self.pitchAngle = resultant_angle
         

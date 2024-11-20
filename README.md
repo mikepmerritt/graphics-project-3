@@ -34,3 +34,13 @@ TODO: implement and update here
 ### Bonus Features
 
 TODO: implement and update here
+
+## Textures
+
+Hanging Lamp Pole 
+- Available at: https://www.poliigon.com/texture/matte-brushed-metal-texture/7174 
+- Used Base Color for the lighter gray
+
+Hanging Lamp Shade 
+- Available at: https://www.poliigon.com/texture/matte-brushed-metal-texture/7174 
+- Used Roughness Map for the darker gray
