@@ -956,26 +956,30 @@ def draw_dice(x, y, z):
 # TODO: implement
 def draw_pool_table(x, y, z):
     # corners (3 x 2 x 3) # floor should be at midpoint level, hole extends down
+    draw_corner(x - 8, y + 4.75, z - 3.5)
+    draw_corner(x + 8, y + 4.75, z - 3.5)
+    draw_corner(x - 8, y + 4.75, z + 3.5)
+    draw_corner(x + 8, y + 4.75, z + 3.5)
 
     # middles (3 x 2 x 3) # floor should be at midpoint level, hole extends down
 
-    # x-aligned wood segments (5 x 2 x 1)
+    # x-aligned wood segments (5 x 1.5 x 1)
     draw_rect(x - 4, y + 4.75, z - 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
     draw_rect(x + 4, y + 4.75, z - 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
     draw_rect(x - 4, y + 4.75, z + 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
     draw_rect(x + 4, y + 4.75, z + 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
 
-    # x-aligned felt segments (5 x 2 x 1)
+    # x-aligned felt segments (5 x 1.5 x 1)
     draw_rect(x - 4, y + 4.75, z - 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
     draw_rect(x + 4, y + 4.75, z - 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
     draw_rect(x - 4, y + 4.75, z + 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
     draw_rect(x + 4, y + 4.75, z + 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
 
-    # z-aligned wood segments (1 x 2 x 4)
+    # z-aligned wood segments (1 x 1.5 x 4)
     draw_rect(x - 9, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, table_support_texture)
     draw_rect(x + 9, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, table_support_texture)
 
-    # z-aligned felt segments (1 x 2 x 4)
+    # z-aligned felt segments (1 x 1.5 x 4)
     draw_rect(x - 8, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, felt_texture)
     draw_rect(x + 8, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, felt_texture)
 
@@ -1088,6 +1092,34 @@ def draw_rect(x, y, z, x_size, y_size, z_size, x_slices, y_slices, z_slices, tex
     # return
     glPopMatrix()
 
+def draw_corner(x, y, z):
+    glPushMatrix()
+    glTranslate(x, y, z) 
+
+    draw_rect(0, 0, 0, 3, 2, 3, 3, 2, 3, felt_texture)
+    
+    # felt north triangular prism
+    # glPushMatrix()
+    # glTranslate(x_size/2, -y_size/2, -z_size/2)
+    # glRotated(180, 0, 1, 0)
+    # draw_plane(x_size, y_size, x_slices, y_slices, texture_name)
+    # glPopMatrix()
+
+    # felt east triangular prism
+
+    # wood southwest corner
+
+    # felt entryway
+
+    # wood bottom panel
+
+    # black bottom circle
+
+    # black back arc liner
+
+    # black front arc liner
+
+    glPopMatrix()
 
 # TODO: implement
 def draw_billiard_ball(x, y, z, texture):
