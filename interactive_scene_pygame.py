@@ -96,7 +96,8 @@ lights = [
         enabled=False,
         ambient=[1.0, 1.0, 1.0, 1.0],  
         diffuse=[1.0, 1.0, 1.0, 1.0],
-        specular=[1.0, 1.0, 1.0, 1.0] 
+        specular=[1.0, 1.0, 1.0, 1.0],
+        is_spotlight=False
     ),
     # Red light in far-left quarter of room
     Light(
@@ -393,8 +394,8 @@ def place_lights():
                 glLightf(light.gl_light_name, GL_SPOT_CUTOFF,180.0)
                 glLightf(light.gl_light_name, GL_SPOT_EXPONENT, 0.0)
                 
-                glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE if light.lv else GL_FALSE)
-                glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE if light.two_side else GL_FALSE)
+            glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE if light.lv else GL_FALSE)
+            glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE if light.two_side else GL_FALSE)
 
             glEnable(light.gl_light_name)
 
