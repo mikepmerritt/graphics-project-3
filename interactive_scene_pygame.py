@@ -38,6 +38,12 @@ lamp_head_texture = None
 aluminum_light_texture = None
 aluminum_dark_texture = None
 felt_texture = None
+dice_texture_1 = None
+dice_texture_2 = None
+dice_texture_3 = None
+dice_texture_4 = None
+dice_texture_5 = None
+dice_texture_6 = None
 
 # scene-specific state information
 dice_animating = False
@@ -179,7 +185,7 @@ def init():
     # quadrics
     global tube, ball, disk
     # textures
-    global floor_texture, wall_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture
+    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture
 
     # pygame setup
     pygame.init()
@@ -197,6 +203,12 @@ def init():
     aluminum_dark_texture = load_texture("HangingLamp_Dark.jpg")
     aluminum_light_texture = load_texture("HangingLamp_Light.jpg")
     felt_texture = load_texture("felt-temp.jpg")
+    dice_texture_1 = load_texture("dice_1.jpg")
+    dice_texture_2 = load_texture("dice_2.jpg")
+    dice_texture_3 = load_texture("dice_3.jpg")
+    dice_texture_4 = load_texture("dice_4.jpg")
+    dice_texture_5 = load_texture("dice_5.jpg")
+    dice_texture_6 = load_texture("dice_6.jpg")
     floor_texture = generate_checkerboard_texture(4, 4, 1, [[139, 69, 19, 255], [205, 133, 63, 255]]) 
 
     # loading / creating quadrics
@@ -792,77 +804,6 @@ def draw_desk_lamp(x, y, z):
     
     glPopMatrix()
 
-def draw_dice_face_dots(face_number):
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [0, 0, 0, 1.0])
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0, 0, 0, 1.0])
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.3, 0.3, 0.3, 1.0])
-    glMaterialf(GL_FRONT, GL_SHININESS, 32.0)
-    
-    dot_radius = 0.02 
-    offset = 0.1     
-
-    if face_number == 1:
-        glPushMatrix()
-        glTranslatef(0, 0, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-    elif face_number == 2:
-        glPushMatrix()
-        glTranslatef(offset, offset, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-        glPushMatrix()
-        glTranslatef(-offset, -offset, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-    elif face_number == 3:
-        glPushMatrix()
-        glTranslatef(0, 0, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-        glPushMatrix()
-        glTranslatef(offset, offset, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-        glPushMatrix()
-        glTranslatef(-offset, -offset, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-    elif face_number == 4:
-        for x in [offset, -offset]:
-            for y in [offset, -offset]:
-                glPushMatrix()
-                glTranslatef(x, y, 0)
-                gluSphere(ball, dot_radius, 16, 16)
-                glPopMatrix()
-                
-    elif face_number == 5:
-        glPushMatrix()
-        glTranslatef(0, 0, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-        for x in [offset, -offset]:
-            for y in [offset, -offset]:
-                glPushMatrix()
-                glTranslatef(x, y, 0)
-                gluSphere(ball, dot_radius, 16, 16)
-                glPopMatrix()
-                
-    elif face_number == 6:
-        for x in [offset, -offset]:
-            for y in [offset, 0, -offset]:
-                glPushMatrix()
-                glTranslatef(x, y, 0)
-                gluSphere(ball, dot_radius, 16, 16)
-                glPopMatrix()
-
 def draw_single_dice(x, y, z, size, rotations=[0,0,0]):
     glPushMatrix()
     glTranslatef(x, y, z)   
@@ -870,89 +811,86 @@ def draw_single_dice(x, y, z, size, rotations=[0,0,0]):
     glRotatef(rotations[1], 0, 1, 0)
     glRotatef(rotations[2], 0, 0, 1) 
     
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.2, 0, 0, 1.0])
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0, 0, 1.0])
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.3, 0.3, 0.3, 1.0])
-    glMaterialf(GL_FRONT, GL_SHININESS, 32.0)
+    glMaterialfv(GL_FRONT, GL_AMBIENT, [1.0, 1.0, 1.0, 1.0])
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, [1.0, 1.0, 1.0, 1.0])
+    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(GL_FRONT, GL_SHININESS, 0.0)
     
+    glEnable(GL_TEXTURE_2D)
+    
+    def set_texture_params():
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    
+    glBindTexture(GL_TEXTURE_2D, dice_texture_1)
+    set_texture_params()
     glBegin(GL_QUADS)
-    
     glNormal3f(0, 0, 1)
-    glVertex3f(-size, -size, size)
-    glVertex3f(size, -size, size)
-    glVertex3f(size, size, size)
-    glVertex3f(-size, size, size)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, size)
+    glTexCoord2f(1.0, 0.0); glVertex3f(size, -size, size)
+    glTexCoord2f(1.0, 1.0); glVertex3f(size, size, size)
+    glTexCoord2f(0.0, 1.0); glVertex3f(-size, size, size)
+    glEnd()
     
+    glBindTexture(GL_TEXTURE_2D, dice_texture_6)
+    set_texture_params()
+    glBegin(GL_QUADS)
     glNormal3f(0, 0, -1)
-    glVertex3f(-size, -size, -size)
-    glVertex3f(-size, size, -size)
-    glVertex3f(size, size, -size)
-    glVertex3f(size, -size, -size)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, -size)
+    glTexCoord2f(1.0, 0.0); glVertex3f(-size, size, -size)
+    glTexCoord2f(1.0, 1.0); glVertex3f(size, size, -size)
+    glTexCoord2f(0.0, 1.0); glVertex3f(size, -size, -size)
+    glEnd()
     
+    glBindTexture(GL_TEXTURE_2D, dice_texture_2)
+    set_texture_params()
+    glBegin(GL_QUADS)
     glNormal3f(1, 0, 0)
-    glVertex3f(size, -size, -size)
-    glVertex3f(size, size, -size)
-    glVertex3f(size, size, size)
-    glVertex3f(size, -size, size)
+    glTexCoord2f(0.0, 0.0); glVertex3f(size, -size, -size)
+    glTexCoord2f(1.0, 0.0); glVertex3f(size, size, -size)
+    glTexCoord2f(1.0, 1.0); glVertex3f(size, size, size)
+    glTexCoord2f(0.0, 1.0); glVertex3f(size, -size, size)
+    glEnd()
     
+    glBindTexture(GL_TEXTURE_2D, dice_texture_5)
+    set_texture_params()
+    glBegin(GL_QUADS)
     glNormal3f(-1, 0, 0)
-    glVertex3f(-size, -size, -size)
-    glVertex3f(-size, -size, size)
-    glVertex3f(-size, size, size)
-    glVertex3f(-size, size, -size)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, -size)
+    glTexCoord2f(1.0, 0.0); glVertex3f(-size, -size, size)
+    glTexCoord2f(1.0, 1.0); glVertex3f(-size, size, size)
+    glTexCoord2f(0.0, 1.0); glVertex3f(-size, size, -size)
+    glEnd()
     
+    glBindTexture(GL_TEXTURE_2D, dice_texture_3)
+    set_texture_params()
+    glBegin(GL_QUADS)
     glNormal3f(0, 1, 0)
-    glVertex3f(-size, size, -size)
-    glVertex3f(-size, size, size)
-    glVertex3f(size, size, size)
-    glVertex3f(size, size, -size)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-size, size, -size)
+    glTexCoord2f(1.0, 0.0); glVertex3f(-size, size, size)
+    glTexCoord2f(1.0, 1.0); glVertex3f(size, size, size)
+    glTexCoord2f(0.0, 1.0); glVertex3f(size, size, -size)
+    glEnd()
     
+    glBindTexture(GL_TEXTURE_2D, dice_texture_4)
+    set_texture_params()
+    glBegin(GL_QUADS)
     glNormal3f(0, -1, 0)
-    glVertex3f(-size, -size, -size)
-    glVertex3f(size, -size, -size)
-    glVertex3f(size, -size, size)
-    glVertex3f(-size, -size, size)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, -size)
+    glTexCoord2f(1.0, 0.0); glVertex3f(size, -size, -size)
+    glTexCoord2f(1.0, 1.0); glVertex3f(size, -size, size)
+    glTexCoord2f(0.0, 1.0); glVertex3f(-size, -size, size)
+    glEnd()
     
-    glEnd()    
-    glPushMatrix()
-    glTranslatef(0, 0, size + 0.001)  
-    draw_dice_face_dots(1)
-    glPopMatrix()
-    
-    glPushMatrix()
-    glTranslatef(0, 0, -(size + 0.001))  
-    draw_dice_face_dots(6)
-    glPopMatrix()
-    
-    glPushMatrix()
-    glTranslatef(size + 0.001, 0, 0)  
-    glRotatef(90, 0, 1, 0)
-    draw_dice_face_dots(2)
-    glPopMatrix()
-    
-    glPushMatrix()
-    glTranslatef(-(size + 0.001), 0, 0)  
-    glRotatef(-90, 0, 1, 0)
-    draw_dice_face_dots(5)
-    glPopMatrix()
-    
-    glPushMatrix()
-    glTranslatef(0, size + 0.001, 0)  
-    glRotatef(-90, 1, 0, 0)
-    draw_dice_face_dots(3)
-    glPopMatrix()
-    
-    glPushMatrix()
-    glTranslatef(0, -(size + 0.001), 0)  
-    glRotatef(90, 1, 0, 0)
-    draw_dice_face_dots(4)
-    glPopMatrix()
-    
+    glDisable(GL_TEXTURE_2D)
     glPopMatrix()
 
 def draw_dice(x, y, z):
     draw_single_dice(x, y, z, 0.2, dice_rotation)
-    draw_single_dice(x + 1.2, y, z + 0.3, 0.2, dice_rotation2)
+    draw_single_dice(x + 1.2, y, z + 0.2, 0.2, dice_rotation2)
 
 # TODO: implement
 def draw_pool_table(x, y, z):
