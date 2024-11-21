@@ -157,7 +157,6 @@ lights = [
 window_dimensions = (1000, 800)
 name = b'Project 2'
 animate = False
-viewAngle = 0
 
 def main():
     init()
@@ -286,7 +285,7 @@ def advance():
 # Function used to handle any key events
 # event: The keyboard event that happened
 def keyboard(event):
-    global running, animate, viewAngle, spinAngle, dice_animating
+    global running, animate, dice_animating
     key = event.key # "ASCII" value of the key pressed
     if key == 27:  # ASCII code 27 = ESC-key
         running = False
@@ -350,11 +349,9 @@ def draw_scene():
     # Place the camera
     glMatrixMode(GL_MODELVIEW);
     camera.placeCamera()
-    # print(camera)
     
     # Now transform the world
     glColor3f(1, 1, 1)
-    glRotate(viewAngle, 0, 1, 0)
     place_lights()
     draw() 
 
