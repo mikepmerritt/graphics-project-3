@@ -1042,14 +1042,20 @@ def draw_corner(x, y, z):
     glPushMatrix()
     glTranslate(x, y, z) 
 
-    # draw_rect(-1, 0, -1, 3, 1.5, 3, 6, 3, 6, felt_texture)
-
     # cylinder
     glPushMatrix()
+
+    glBindTexture(GL_TEXTURE_2D, table_support_texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
     # Enable/Disable each time or OpenGL ALWAYS expects texturing!
     glEnable(GL_TEXTURE_2D)
 
-    set_aluminum(GL_FRONT_AND_BACK)
     # parameters are: quadric, base radius, height radius, height, slices, stacks
     glTranslate(0, 0.75, 0)
     glRotatef(90, 1, 0, 0)
@@ -1137,7 +1143,6 @@ def draw_corner(x, y, z):
     glVertex3f(1.1, 0.75, 1.1) # temp bottom right (9)
 
     glEnd()
-
 
     glDisable(GL_TEXTURE_2D)
 
