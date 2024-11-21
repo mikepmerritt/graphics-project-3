@@ -68,6 +68,10 @@ reflickering = False
 reflicker_duration = 0
 reflicker_elapsed_frames = 0
 
+light_swinging = False
+light_swing_speed = 0
+light_swing_angle = 0
+
 # These parameters define simple animation properties
 FPS = 60.0
 DELAY = int(1000.0 / FPS + 0.5)
@@ -416,11 +420,28 @@ def advance():
 
     # print(f'Flicker: \t{flickering}, Reflicker: \t{reflickering}')
                     
+    global light_swinging, light_slowing, light_swing_speed, light_swing_angle
+    # if the light is actively swinging, keep adjusting the angle
+    if light_swinging:
+        light_swing_angle += light_swing_speed
+        if abs(light_swing_angle) >= 45:
+            light_swing_speed *= -1
+        # need to multiply by 5 to account for the radius of the lights arc
+        # otherwise the angle is drawn from straight down, so x is sine and y is cosine
+        light_x = 5 * math.sin(math.radians(light_swing_angle))
+        light_y = 5 * math.cos(math.radians(light_swing_angle))
+        lights[4].position.x = light_x
+        lights[4].position.y = 40 - light_y # need to account for coming from the ceiling
+        lights[4].direction[0] = math.sin(math.radians(light_swing_angle)) # normalized
+        lights[4].direction[1] = -math.cos(math.radians(light_swing_angle)) # normalized
+
+    # print(f'Swinging: \t{light_swinging}, Angle: {light_swing_angle}')
+    # print(f'Light Pos: {lights[4].position}, Light Direction: {lights[4].direction}')
 
 # Function used to handle any key events
 # event: The keyboard event that happened
 def keyboard(event):
-    global running, dice_animating, hanging_light_switched_on, light_swinging
+    global running, dice_animating, hanging_light_switched_on, light_swinging, light_swing_speed
     key = event.key # "ASCII" value of the key pressed
     if key == 27:  # ASCII code 27 = ESC-key
         running = False
@@ -467,11 +488,9 @@ def keyboard(event):
         # Toggle activation of light 4
         hanging_light_switched_on = not hanging_light_switched_on
         lights[4].enabled = hanging_light_switched_on
-
         # stop flickering if the light gets turned off
         if not hanging_light_switched_on:
             light_flickering = False
-
     elif key == ord('5'):
         # Toggle activation of light 5
         lights[5].enabled = not lights[5].enabled
@@ -479,9 +498,10 @@ def keyboard(event):
         # Play dice roll animation
         if not dice_animating:
             dice_animating = True
-    elif key == ord('h'):
-        # Play dice hanging light swing
+    elif key == ord('t'):
+        # Play hanging light swing
         light_swinging = not light_swinging
+        light_swing_speed = 0.5
 
 # function to set up the camera, lights, and world
 def draw_scene():
@@ -1233,6 +1253,7 @@ def draw_hanging_spotlight(x, y, z):
     # may need additional parameters for swinging
     glPushMatrix()
     glTranslatef(x, y, z)
+    glRotatef(light_swing_angle, 0, 0, 1)
 
     pole_radius = 0.25
     pole_height = 5
