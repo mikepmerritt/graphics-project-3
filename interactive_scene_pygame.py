@@ -54,10 +54,19 @@ dice_texture_4 = None
 dice_texture_5 = None
 dice_texture_6 = None
 
-# scene-specific state information
+# Dice state information
 dice_animating = False
 dice_rotation = [0, 0, 0] 
 dice_rotation2 = [0, 0, 0]
+
+# Hanging light state information
+hanging_light_switched_on = False
+flickering = False
+flicker_duration = 0
+flicker_elapsed_frames = 0
+reflickering = False
+reflicker_duration = 0
+reflicker_elapsed_frames = 0
 
 # These parameters define simple animation properties
 FPS = 60.0
@@ -125,7 +134,6 @@ lights = [
         linear_attenuation=0.01,
         quadratic_attenuation=0
     ),
-
     # Hanging light in center of the room
     Light(
         GL_LIGHT4, 
@@ -137,7 +145,7 @@ lights = [
         direction=[0.0, -1.0, 0.0, 0.0],
         display_ball=True,
         is_spot_light=True,
-        spot_cutoff=90.0,
+        spot_cutoff=10.0,
         spot_exponent=10
     ),
     # Lamp in far right-corner of room
@@ -159,7 +167,6 @@ lights = [
 # Window data
 window_dimensions = (1000, 800)
 name = b'Project 2'
-animate = False
 
 #==============================
 # OpenGL and Scene Setup
@@ -274,7 +281,7 @@ def generate_checkerboard_texture(nrows, ncols, block_size, block_colors):
     return texture_name
 
 def main_loop():
-    global running, clock, animate
+    global running, clock
     while running:
         # poll for events
         # pygame.QUIT event means the user clicked X to close your window
@@ -284,9 +291,10 @@ def main_loop():
             elif event.type == pygame.KEYDOWN:
                 keyboard(event)
 
-        if animate:
-            # Advance to the next frame
-            advance()
+
+        # Always advance to the next frame
+        #   Necessary for calculating rolling dice positions or swinging light location
+        advance()
 
         # (Re)draw the scene (should only do this when necessary!)
         display()
@@ -319,9 +327,9 @@ def display():
 
 # Advance the scene one frame
 def advance():
-    # put any animation stuff in here
-     global dice_animating, dice_rotation, dice_rotation2, animate
-     if dice_animating:
+    # Dice animations
+    global dice_animating, dice_rotation, dice_rotation2
+    if dice_animating:
         dice_rotation[0] += 5  
         dice_rotation[1] += 8  
         dice_rotation[2] += 3  
@@ -329,22 +337,93 @@ def advance():
         dice_rotation2[0] += 8  
         dice_rotation2[1] += 5
         dice_rotation2[2] += 6
-        
+    
         if dice_rotation[0] >= 540: 
             dice_animating = False
-            animate = False
             dice_rotation = [random.randint(0,3) * 90, random.randint(0,3) * 90, random.randint(0,3) * 90]
             dice_rotation2 = [random.randint(0,3) * 90, random.randint(0,3) * 90, random.randint(0,3) * 90]
+
+    # Hanging light animations
+    global hanging_light_switched_on, flickering, flicker_duration, flicker_elapsed_frames, reflickering, reflicker_duration, reflicker_elapsed_frames
+
+    # FLICKERING PROCESS:
+    #   If the light has been activated by the player, it can flicker off randomly
+    #       When it flickers off, the light is immediately disabled and the duration of this flicker is set
+    #       The light will be in the flicker state until the full flicker duration has passed
+    #       When in the flicker state, it is possible for the light to turn on again, called a reflicker
+    #       This will cause the light to immediately be re-enabled and a new duration for reflicker is set
+    #       When in a reflicker state, the light is enabled, until the reflicker is over
+
+    # only start a flicker if the light is on
+    if hanging_light_switched_on:
+        # if not flickering, try to start one
+        if not flickering:
+            # check if a flicker should happen (has a 10% chance every frame)
+            should_flicker = random.random() < 0.1
+            # begin the flicker
+            if should_flicker:
+                flickering = True
+                flicker_duration = random.random() * 1.5 * FPS # flicker of up to 3 seconds
+                flicker_elapsed_frames = 0
+                lights[4].enabled = False
+        # if the light is flickering, count up the flicker time or reflicker time
+        else:
+            # check if flicker is ongoing or ended
+            if flicker_duration > flicker_elapsed_frames:
+                flicker_elapsed_frames += 1
+            else:
+                flickering = False
+                flicker_duration = 0
+                flicker_elapsed_frames = 0
+                
+                reflickering = False
+                reflicker_duration = 0
+                reflicker_elapsed_frames = 0
+
+                # restore original light properties
+                lights[4].enabled = True
+                lights[4].ambient = [0.5, 0.5, 0.0, 1.0]
+                lights[4].diffuse = [0.5, 0.5, 0.0, 1.0]
+                lights[4].specular = [0.5, 0.5, 0.0, 1.0]
+
+            # if not reflickering, try to start one
+            if not reflickering:
+                # check if a reflicker should happen (has a 30% chance every frame)
+                should_reflicker = random.random() < 0.3
+                # begin the reflicker
+                if should_reflicker:
+                    reflickering = True
+                    reflicker_duration = random.random() * 0.5 * FPS # reflicker of up to 1 seconds
+                    reflicker_elapsed_frames = 0
+                    # reflicker with lower light level
+                    lights[4].enabled = True
+                    lights[4].ambient = [0.1, 0.1, 0.0, 1.0]
+                    lights[4].diffuse = [0.1, 0.1, 0.0, 1.0]
+                    lights[4].specular = [0.1, 0.1, 0.0, 1.0]
+            else:
+                # check if reflicker is ongoing or ended
+                if reflicker_duration > reflicker_elapsed_frames:
+                    reflicker_elapsed_frames += 1
+                else:                 
+                    reflickering = False
+                    reflicker_duration = 0
+                    reflicker_elapsed_frames = 0
+                    # restore original light level
+                    lights[4].enabled = True
+                    lights[4].ambient = [0.5, 0.5, 0.0, 1.0]
+                    lights[4].diffuse = [0.5, 0.5, 0.0, 1.0]
+                    lights[4].specular = [0.5, 0.5, 0.0, 1.0]
+
+    # print(f'Flicker: \t{flickering}, Reflicker: \t{reflickering}')
+                    
 
 # Function used to handle any key events
 # event: The keyboard event that happened
 def keyboard(event):
-    global running, animate, dice_animating
+    global running, dice_animating, hanging_light_switched_on, light_swinging
     key = event.key # "ASCII" value of the key pressed
     if key == 27:  # ASCII code 27 = ESC-key
         running = False
-    elif key == ord(' '):
-        animate = not animate
     elif key == ord('w'):
         # Go forward
         camera.slide(0,0,-1)
@@ -386,14 +465,23 @@ def keyboard(event):
         lights[3].enabled = not lights[3].enabled
     elif key == ord('4'):
         # Toggle activation of light 4
-        lights[4].enabled = not lights[4].enabled
+        hanging_light_switched_on = not hanging_light_switched_on
+        lights[4].enabled = hanging_light_switched_on
+
+        # stop flickering if the light gets turned off
+        if not hanging_light_switched_on:
+            light_flickering = False
+
     elif key == ord('5'):
         # Toggle activation of light 5
         lights[5].enabled = not lights[5].enabled
-    elif key == ord('6'):
+    elif key == ord('g'):
+        # Play dice roll animation
         if not dice_animating:
             dice_animating = True
-            animate = True
+    elif key == ord('h'):
+        # Play dice hanging light swing
+        light_swinging = not light_swinging
 
 # function to set up the camera, lights, and world
 def draw_scene():
