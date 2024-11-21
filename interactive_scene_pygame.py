@@ -39,6 +39,7 @@ disk = None
 # textures
 floor_texture = None
 wall_texture = None
+ceiling_texture = None
 table_top_texture = None 
 table_support_texture = None
 lamp_support_texture = None
@@ -184,7 +185,7 @@ def init():
     # quadrics
     global tube, ball, disk
     # textures
-    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture
+    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, ceiling_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture
 
     # pygame setup
     pygame.init()
@@ -194,7 +195,8 @@ def init():
     running = True
 
     # loading / generating textures
-    wall_texture = load_texture("wall.jpg", 512) 
+    wall_texture = load_texture("wall.jpg", 512)
+    ceiling_texture = load_texture("Concrete_texture.jpg", 1024) 
     table_top_texture = load_texture("table_top.jpg", 512)
     table_support_texture = load_texture("table_support.jpg", 512)
     lamp_support_texture = load_texture("lamp_support.jpg", 512)
@@ -465,9 +467,9 @@ def place_lights():
 def draw_objects():
     glPushMatrix()
     # TODO: add function calls here
-    draw_floor(0, 0, 0, 80, 80, 4, 4)
-    draw_walls()
-    draw_ceiling()
+    draw_floor(0, 0, 0, 80, 80, 10, 10)
+    draw_walls(0, 0, 0, 80, 40, 10, 5)
+    draw_ceiling(0, 40, 0, 80, 80, 10, 10)
     draw_side_table(-35, 0, -34)
     draw_desk_lamp(-32, 8, -36)
     draw_dice(-37, 8.22, -34)
@@ -481,71 +483,61 @@ def draw_objects():
 # Scene-drawing functions
 #=======================================
 
-# draws the floor
+# draws the floor using a textured plane
 def draw_floor(center_x, y, center_z, x_dim, z_dim, x_slices, z_slices):
+    set_floor_material(GL_FRONT)
+    
     glPushMatrix()
     glTranslatef(center_x - x_dim / 2, y, center_z + z_dim / 2)
     glRotatef(-90, 1, 0, 0)
-    
-    set_floor_material(GL_FRONT)
     draw_textured_plane(x_dim, z_dim, x_slices, z_slices, floor_texture)
-
-    glPopMatrix()
-    
-def draw_wall(start_x, start_z, end_x, end_z, height, normal):
-    glBegin(GL_QUADS)
-    glNormal3f(*normal)  
-    glTexCoord2f(0, 0)
-    glVertex3f(start_x, 0, start_z)      
-    glTexCoord2f(4, 0)
-    glVertex3f(end_x, 0, end_z)          
-    glTexCoord2f(4, 2)
-    glVertex3f(end_x, height, end_z)      
-    glTexCoord2f(0, 2)
-    glVertex3f(start_x, height, start_z)  
-    glEnd()
-
-def draw_walls():
-    glPushMatrix()
-    
-    glBindTexture(GL_TEXTURE_2D, wall_texture)
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-    
-    glEnable(GL_TEXTURE_2D)
-
-    height = 40
-    set_wall_material(GL_FRONT)
-    draw_wall(-40, -40, 40, -40, height, (0, 0, 1))    
-    draw_wall(40, -40, 40, 40, height, (-1, 0, 0))     
-    draw_wall(-40, 40, -40, -40, height, (1, 0, 0))   
-    draw_wall(40, 40, -40, 40, height, (0, 0, -1))   
-
-    glDisable(GL_TEXTURE_2D)
+    # glTranslatef(0, 0, 1); gluSphere(ball, 0.25, 16, 16) # Normal check
     glPopMatrix()
 
-def draw_ceiling():
+# draws a square room using textured planes
+def draw_walls(center_x, y, center_z, length, height, l_slices, h_slices):
+    set_wall_material(GL_FRONT)  
+
+    # Draw side 1 backward-facing wall on xy-plane (opposite player)
     glPushMatrix()
+    glTranslatef(center_x - length / 2, y, center_z - length / 2)    
+    draw_textured_plane(length, height, l_slices, h_slices, wall_texture)
+    # glTranslatef(0, 0, 1); gluSphere(ball, 0.25, 16, 16) # Normal check
+    glPopMatrix()
+
+    # Draw side 2 forward-facing wall on xy-plane (behind player)
+    glPushMatrix()
+    glRotate(180, 0, 1, 0)
+    glTranslatef(center_x - length / 2, y, center_z - length / 2)
+    draw_textured_plane(length, height, l_slices, h_slices, wall_texture)
+    # glTranslatef(0, 0, 1); gluSphere(ball, 0.25, 16, 16) # Normal check   
+    glPopMatrix()
+
+    # Draw side 3 right-facing wall on yz-plane (left of player)
+    glPushMatrix()
+    glRotate(90, 0, 1, 0)
+    glTranslatef(center_z - length / 2, y, center_x - length / 2)
+    draw_textured_plane(length, height, l_slices, h_slices, wall_texture) 
+    # glTranslatef(0, 0, 1); gluSphere(ball, 0.25, 16, 16) # Normal check  
+    glPopMatrix()
+
+    # Draw side 4 left-facing wall on yz-plane (right of player)
+    glPushMatrix()
+    glRotate(270, 0, 1, 0)
+    glTranslatef(center_z - length / 2, y, center_x - length / 2)
+    draw_textured_plane(length, height, l_slices, h_slices, wall_texture)  
+    # glTranslatef(0, 0, 1); gluSphere(ball, 0.25, 16, 16) # Normal check
+    glPopMatrix()
+
+# draws the ceiling using a textured plane facing down
+def draw_ceiling(center_x, y, center_z, x_dim, z_dim, x_slices, z_slices):
+    set_ceiling_material(GL_FRONT)
     
-    set_wall_material(GL_FRONT)
-
-    glBegin(GL_QUADS)
-    glNormal3f(0, -1, 0)
-    glTexCoord2f(0, 0)
-    glVertex3f(-40, 40, -40)
-    glTexCoord2f(4, 0)
-    glVertex3f(40, 40, -40)
-    glTexCoord2f(4, 4)
-    glVertex3f(40, 40, 40)
-    glTexCoord2f(0, 4)
-    glVertex3f(-40, 40, 40)
-    glEnd()
-
-    glDisable(GL_TEXTURE_2D)
+    glPushMatrix()
+    glTranslatef(center_x - x_dim / 2, y, center_z - z_dim / 2)
+    glRotatef(90, 1, 0, 0)
+    draw_textured_plane(x_dim, z_dim, x_slices, z_slices, ceiling_texture)
+    # glTranslatef(0, 0, 1); gluSphere(ball, 0.25, 16, 16) # Normal check
     glPopMatrix()
 
 def draw_table_top(width, length):
@@ -942,14 +934,14 @@ def draw_textured_plane(x_size, y_size, x_slices, y_slices, texture):
         glBegin(GL_TRIANGLE_STRIP)
         cx = 0
         for i in range(x_slices):
-            glTexCoord2f(cx, y+dy)
+            glTexCoord2f(cx/x_size, (y+dy)/y_size)
             glVertex3f(cx, y+dy, 0)
-            glTexCoord2f(cx, y)
+            glTexCoord2f(cx/x_size, y/y_size)
             glVertex3f(cx, y, 0)
             cx += dx
-        glTexCoord2f(x_size, y+dy)
+        glTexCoord2f(1, (y+dy)/y_size)
         glVertex3f(x_size, y+dy, 0)
-        glTexCoord2f(x_size, y)
+        glTexCoord2f(1, y/y_size)
         glVertex3f(x_size, y, 0)
         glEnd()
         y += dy
@@ -1123,7 +1115,14 @@ def set_wall_material(face):
     glMaterialfv(face, GL_SPECULAR, [0.0, 0.0, 0.0, 1.0])
     glMaterialf(face, GL_SHININESS, 0.0)
 
-# helper method to set the material properties for the checkerboard floor
+# helper method to set the material properties for the walls
+def set_ceiling_material(face):
+    glMaterialfv(face, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [0.6, 0.6, 0.6, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(face, GL_SHININESS, 10.0)
+
+# helper method to set the material properties for the felt
 # TODO: double check values
 def set_felt_material(face):
     glMaterialfv(face, GL_AMBIENT, [0.5, 0.5, 0.5, 1.0])

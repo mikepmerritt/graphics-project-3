@@ -44,3 +44,7 @@ Hanging Lamp Pole
 Hanging Lamp Shade 
 - Available at: https://www.poliigon.com/texture/matte-brushed-metal-texture/7174 
 - Used Roughness Map for the darker gray
+
+Ceiling Concrete
+- Available at: https://www.poliigon.com/texture/mottled-matte-panel-concrete-texture-misty-grey/7656
+- Used Base Color for the texture
