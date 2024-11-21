@@ -59,18 +59,26 @@ class Light:
         diffuse=[1.0, 1.0, 1.0, 1.0], 
         specular=[1.0, 1.0, 1.0, 1.0], 
         is_point=True,
-        display_ball=True
+        display_ball=True,
+        lv=False,
+        two_side=True,
+        direction=[0.0, -1.0, 0.0, 0.0],
+        is_spotlight=True
     ):
         self.gl_light_name = gl_light_name
         self.enabled = enabled
         self.is_point = is_point
         self.display_ball = display_ball
+        self.lv = lv
+        self.two_side = two_side
+        self.is_spotlight = is_spotlight
 
         # copy arrays / objects to prevent aliasing
         self.position = copy.deepcopy(position)
         self.ambient = copy.deepcopy(ambient)
         self.diffuse = copy.deepcopy(diffuse)
         self.specular = copy.deepcopy(specular)
+        self.direction = copy.deepcopy(direction)
         
     # used to get the position as 4 value list for glLightfv function
     # constructs the list using the position Point and the is_point value to determine if point light or directional light
@@ -370,6 +378,24 @@ def place_lights():
             glLightfv(light.gl_light_name, GL_AMBIENT, light.ambient)
             glLightfv(light.gl_light_name, GL_DIFFUSE, light.diffuse)
             glLightfv(light.gl_light_name, GL_SPECULAR, light.specular)
+
+            # Constant attenuation (for distance, etc.)
+            # Only works for fixed light locations!  Otherwise disabled
+            glLightf(light.gl_light_name, GL_CONSTANT_ATTENUATION, 1.0)
+            glLightf(light.gl_light_name, GL_LINEAR_ATTENUATION, 0.0)
+            glLightf(light.gl_light_name, GL_QUADRATIC_ATTENUATION, 0.000)
+
+            # Create a spotlight effect (none at the moment)
+            if light.is_spotlight:
+                glLightf(light.gl_light_name, GL_SPOT_CUTOFF,45.0)
+                glLightf(light.gl_light_name, GL_SPOT_EXPONENT, 2.0)
+                glLightfv(light.gl_light_name, GL_SPOT_DIRECTION, light.direction)
+            else:
+                glLightf(light.gl_light_name, GL_SPOT_CUTOFF,180.0)
+                glLightf(light.gl_light_name, GL_SPOT_EXPONENT, 0.0)
+                
+                glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE if light.lv else GL_FALSE)
+                glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE if light.two_side else GL_FALSE)
 
             glEnable(light.gl_light_name)
 
