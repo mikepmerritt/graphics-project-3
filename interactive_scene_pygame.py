@@ -37,6 +37,7 @@ lamp_support_texture = None
 lamp_head_texture = None
 aluminum_light_texture = None
 aluminum_dark_texture = None
+felt_texture = None
 
 # scene-specific state information
 dice_animating = False
@@ -178,7 +179,7 @@ def init():
     # quadrics
     global tube, ball, disk
     # textures
-    global floor_texture, wall_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture
+    global floor_texture, wall_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture
 
     # pygame setup
     pygame.init()
@@ -195,6 +196,7 @@ def init():
     lamp_head_texture = load_texture("lamp_head.jpg")
     aluminum_dark_texture = load_texture("HangingLamp_Dark.jpg")
     aluminum_light_texture = load_texture("HangingLamp_Light.jpg")
+    felt_texture = load_texture("felt-temp.jpg")
     floor_texture = generate_checkerboard_texture(4, 4, 1, [[139, 69, 19, 255], [205, 133, 63, 255]]) 
 
     # loading / creating quadrics
@@ -419,6 +421,9 @@ def draw():
     draw_desk_lamp(-32, 8, -36)
     draw_dice(-37, 8.22, -34)
     draw_hanging_spotlight(0, 40, 0)
+    draw_pool_table(0, 5, 0)
+    # ball bounds are x: [-7.25, 7.25] z: [-2.75, 2.75]
+    draw_cue_ball(0, 10.25, 0) 
     glPopMatrix()
     
 def load_texture(file_name):
@@ -953,15 +958,150 @@ def draw_dice(x, y, z):
 
 # TODO: implement
 def draw_pool_table(x, y, z):
-    pass
+    # corners (3 x 2 x 3) # floor should be at midpoint level, hole extends down
+
+    # middles (3 x 2 x 3) # floor should be at midpoint level, hole extends down
+
+    # x-aligned wood segments (5 x 2 x 1)
+    draw_rect(x - 4, y + 4.75, z - 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
+    draw_rect(x + 4, y + 4.75, z - 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
+    draw_rect(x - 4, y + 4.75, z + 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
+    draw_rect(x + 4, y + 4.75, z + 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
+
+    # x-aligned felt segments (5 x 2 x 1)
+    draw_rect(x - 4, y + 4.75, z - 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
+    draw_rect(x + 4, y + 4.75, z - 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
+    draw_rect(x - 4, y + 4.75, z + 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
+    draw_rect(x + 4, y + 4.75, z + 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
+
+    # z-aligned wood segments (1 x 2 x 4)
+    draw_rect(x - 9, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, table_support_texture)
+    draw_rect(x + 9, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, table_support_texture)
+
+    # z-aligned felt segments (1 x 2 x 4)
+    draw_rect(x - 8, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, felt_texture)
+    draw_rect(x + 8, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, felt_texture)
+
+    # felt play area (15 x 1 x 6)
+    draw_rect(x, y + 4.5, z, 15, 1, 6, 15, 1, 6, felt_texture)
+
+    # wood bottom middle (19 x 1 x 6)
+    draw_rect(x, y + 3.5, z, 19, 1, 10, 19, 1, 10, table_support_texture)
+
+    # wood legs (3 x 8 x 3)
+    draw_rect(x - 6, y, z - 2.5, 3, 8, 3, 3, 8, 3, table_support_texture)
+    draw_rect(x + 6, y, z - 2.5, 3, 8, 3, 3, 8, 3, table_support_texture)
+    draw_rect(x - 6, y, z + 2.5, 3, 8, 3, 3, 8, 3, table_support_texture)
+    draw_rect(x + 6, y, z + 2.5, 3, 8, 3, 3, 8, 3, table_support_texture)
+
+def draw_plane(x_size, y_size, x_slices, y_slices, texture):
+    """ Draw a textured plane of the specified dimension.
+        The plane is a unit square with lower left corner at origin.
+    """
+    glBindTexture(GL_TEXTURE_2D, texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    # set up felt to be brighter
+    if texture == felt_texture:
+        glMaterialfv(GL_FRONT, GL_AMBIENT, [0.5, 0.5, 0.5, 1.0])
+        glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
+        glMaterialfv(GL_FRONT, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+        glMaterialf(GL_FRONT, GL_SHININESS, 10.0)
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+
+    # Center the plane on the origin in x-direction
+    # Lower corner = (sx, sy) and upper corner = (ex, ey)
+    dx = x_size/x_slices # Change in x direction
+    dy = y_size/y_slices  # Change in y direction
+
+    glNormal3f(0, 0, 1)
+    y = 0
+    for j in range(y_slices):
+        glBegin(GL_TRIANGLE_STRIP)
+        cx = 0
+        for i in range(x_slices):
+            glTexCoord2f(cx, y+dy)
+            glVertex3f(cx, y+dy, 0)
+            glTexCoord2f(cx, y)
+            glVertex3f(cx, y, 0)
+            cx += dx
+        glTexCoord2f(x_size, y+dy)
+        glVertex3f(x_size, y+dy, 0)
+        glTexCoord2f(x_size, y)
+        glVertex3f(x_size, y, 0)
+        glEnd()
+        y += dy
+   
+    glDisable(GL_TEXTURE_2D)
+
+def draw_rect(x, y, z, x_size, y_size, z_size, x_slices, y_slices, z_slices, texture_name):
+    """ Draw a rectangle centered around (x, y, z) with size (x_size, y_size, z_size)."""  
+    # move to cube location
+    glPushMatrix()
+    glTranslate(x, y, z)  
+
+    # Draw side 1 (+z)
+    glPushMatrix()
+    glTranslate(-x_size/2, -y_size/2, z_size/2)
+    draw_plane(x_size, y_size, x_slices, y_slices, texture_name)
+    glPopMatrix()
+
+    # Draw side 2 (-z)
+    glPushMatrix()
+    glTranslate(x_size/2, -y_size/2, -z_size/2)
+    glRotated(180, 0, 1, 0)
+    draw_plane(x_size, y_size, x_slices, y_slices, texture_name)
+    glPopMatrix()
+
+    # Draw side 3 (-x)
+    glPushMatrix()
+    glTranslate(-x_size/2, -y_size/2, -z_size/2)
+    glRotatef(-90, 0, 1, 0)
+    draw_plane(z_size, y_size, z_slices, y_slices, texture_name)
+    glPopMatrix()
+
+    # Draw side 4 (+x)
+    glPushMatrix()
+    glTranslatef(x_size/2, -y_size/2, z_size/2)
+    glRotatef(90, 0, 1, 0)
+    draw_plane(z_size, y_size, z_slices, y_slices, texture_name)
+    glPopMatrix()
+
+    # Draw side 5 (-y)
+    glPushMatrix()
+    glTranslatef(-x_size/2, -y_size/2, -z_size/2)
+    glRotatef(90, 1, 0, 0)
+    draw_plane(x_size, z_size, x_slices, z_slices, texture_name)
+    glPopMatrix()
+
+    # Draw side 6 (+y)
+    glPushMatrix()
+    glTranslatef(-x_size/2, y_size/2, z_size/2)
+    glRotatef(-90, 1, 0, 0)
+    draw_plane(x_size, z_size, x_slices, z_slices, texture_name)
+    glPopMatrix()
+
+    # return
+    glPopMatrix()
+
 
 # TODO: implement
-def draw_billiard_ball(x, y, z, num):
+def draw_billiard_ball(x, y, z, texture):
     pass
 
 # TODO: implement
 def draw_cue_ball(x, y, z):
-    pass
+    glPushMatrix()
+    glTranslatef(x, y, z)
+    gluSphere(ball, 0.25, 16, 16)
+    glPopMatrix()
 
 # TODO: implement swinging
 # TODO: uncertain if lights should have functions or be included in place_lights instead
