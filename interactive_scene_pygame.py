@@ -87,33 +87,42 @@ lights = [
         GL_LIGHT1, 
         enabled=False,
         position=Point(20, 40, -20),
-        ambient=[1.0, 0.0, 0.0, 1.0],  
-        diffuse=[1.0, 0.0, 0.0, 1.0],
-        specular=[1.0, 0.0, 0.0, 1.0],
+        ambient=[0.3, 0.0, 0.0, 1.0],  
+        diffuse=[0.3, 0.0, 0.0, 1.0],
+        specular=[0.3, 0.0, 0.0, 1.0],
         display_ball=True,
-        is_point_light=True # TODO: determine if this is the correct type
+        is_point_light=True, # TODO: determine if this is the correct type
+        constant_attenuation=1,
+        linear_attenuation=0.01,
+        quadratic_attenuation=0
     ),
     # Green light in left-center area of room
     Light(
         GL_LIGHT2, 
         enabled=False,
         position=Point(-20, 40, 0),
-        ambient=[0.0, 1.0, 0.0, 1.0],  
-        diffuse=[0.0, 1.0, 0.0, 1.0],
-        specular=[0.0, 1.0, 0.0, 1.0],
+        ambient=[0.0, 0.3, 0.0, 1.0],  
+        diffuse=[0.0, 0.3, 0.0, 1.0],
+        specular=[0.0, 0.3, 0.0, 1.0],
         display_ball=True,
-        is_point_light=True # TODO: determine if this is the correct type
+        is_point_light=True, # TODO: determine if this is the correct type
+        constant_attenuation=1,
+        linear_attenuation=0.01,
+        quadratic_attenuation=0
     ),
     # Blue light in close-right quarter of room
     Light(
         GL_LIGHT3, 
         enabled=False,
         position=Point(20, 40, 20),
-        ambient=[0.0, 0.0, 1.0, 1.0],  
-        diffuse=[0.0, 0.0, 1.0, 1.0],
-        specular=[0.0, 0.0, 1.0, 1.0],
+        ambient=[0.0, 0.0, 0.3, 1.0],  
+        diffuse=[0.0, 0.0, 0.3, 1.0],
+        specular=[0.0, 0.0, 0.3, 1.0],
         display_ball=True,
-        is_point_light=True # TODO: determine if this is the correct type
+        is_point_light=True, # TODO: determine if this is the correct type
+        constant_attenuation=1,
+        linear_attenuation=0.01,
+        quadratic_attenuation=0
     ),
 
     # Hanging light in center of the room
@@ -456,7 +465,7 @@ def place_lights():
 def draw_objects():
     glPushMatrix()
     # TODO: add function calls here
-    draw_floor()
+    draw_floor(0, 0, 0, 80, 80, 4, 4)
     draw_walls()
     draw_ceiling()
     draw_side_table(-35, 0, -34)
@@ -472,35 +481,15 @@ def draw_objects():
 # Scene-drawing functions
 #=======================================
 
-def draw_floor():
+# draws the floor
+def draw_floor(center_x, y, center_z, x_dim, z_dim, x_slices, z_slices):
     glPushMatrix()
+    glTranslatef(center_x - x_dim / 2, y, center_z + z_dim / 2)
+    glRotatef(-90, 1, 0, 0)
     
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.4, 0.4, 0.4, 1.0])  
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.6, 0.6, 0.6, 1.0])   
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.0, 0.0, 0.0, 1.0])  
-    glMaterialf(GL_FRONT, GL_SHININESS, 0.0)     
-    glEnable(GL_TEXTURE_2D)
-    glBindTexture(GL_TEXTURE_2D, floor_texture)
-    
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+    set_floor_material(GL_FRONT)
+    draw_textured_plane(x_dim, z_dim, x_slices, z_slices, floor_texture)
 
-    glBegin(GL_QUADS)
-    glNormal3f(0, 1, 0)  
-    glTexCoord2f(0, 0)
-    glVertex3f(-40, 0, -40)  
-    glTexCoord2f(8, 0)      
-    glVertex3f(40, 0, -40)   
-    glTexCoord2f(8, 8)      
-    glVertex3f(40, 0, 40)    
-    glTexCoord2f(0, 8)     
-    glVertex3f(-40, 0, 40)   
-    glEnd()
-    
-    glDisable(GL_TEXTURE_2D)
     glPopMatrix()
     
 def draw_wall(start_x, start_z, end_x, end_z, height, normal):
@@ -516,26 +505,21 @@ def draw_wall(start_x, start_z, end_x, end_z, height, normal):
     glVertex3f(start_x, height, start_z)  
     glEnd()
 
-def apply_wall_material_and_texture():
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.4, 0.4, 0.4, 1.0])
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.6, 0.6, 0.6, 1.0])
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.0, 0.0, 0.0, 1.0])
-    glMaterialf(GL_FRONT, GL_SHININESS, 0.0)
-
-    glEnable(GL_TEXTURE_2D)
-    glBindTexture(GL_TEXTURE_2D, wall_texture)
+def draw_walls():
+    glPushMatrix()
     
+    glBindTexture(GL_TEXTURE_2D, wall_texture)
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-
-def draw_walls():
-    glPushMatrix()
-    apply_wall_material_and_texture()
     
+    glEnable(GL_TEXTURE_2D)
+
     height = 40
+    set_wall_material(GL_FRONT)
     draw_wall(-40, -40, 40, -40, height, (0, 0, 1))    
     draw_wall(40, -40, 40, 40, height, (-1, 0, 0))     
     draw_wall(-40, 40, -40, -40, height, (1, 0, 0))   
@@ -547,7 +531,8 @@ def draw_walls():
 def draw_ceiling():
     glPushMatrix()
     
-    apply_wall_material_and_texture()
+    set_wall_material(GL_FRONT)
+
     glBegin(GL_QUADS)
     glNormal3f(0, -1, 0)
     glTexCoord2f(0, 0)
@@ -893,55 +878,55 @@ def draw_pool_table(x, y, z):
     # middles (3 x 2 x 3) # floor should be at midpoint level, hole extends down
 
     # x-aligned wood segments (5 x 2 x 1)
+    set_wood_support_material(GL_FRONT)
     draw_rect(x - 4, y + 4.75, z - 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
     draw_rect(x + 4, y + 4.75, z - 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
     draw_rect(x - 4, y + 4.75, z + 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
     draw_rect(x + 4, y + 4.75, z + 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
 
     # x-aligned felt segments (5 x 2 x 1)
+    set_felt_material(GL_FRONT)
     draw_rect(x - 4, y + 4.75, z - 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
     draw_rect(x + 4, y + 4.75, z - 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
     draw_rect(x - 4, y + 4.75, z + 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
     draw_rect(x + 4, y + 4.75, z + 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
 
     # z-aligned wood segments (1 x 2 x 4)
+    set_wood_support_material(GL_FRONT)
     draw_rect(x - 9, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, table_support_texture)
     draw_rect(x + 9, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, table_support_texture)
 
     # z-aligned felt segments (1 x 2 x 4)
+    set_felt_material(GL_FRONT)
     draw_rect(x - 8, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, felt_texture)
     draw_rect(x + 8, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, felt_texture)
 
     # felt play area (15 x 1 x 6)
+    set_felt_material(GL_FRONT)
     draw_rect(x, y + 4.5, z, 15, 1, 6, 15, 1, 6, felt_texture)
 
     # wood bottom middle (19 x 1 x 6)
+    set_wood_support_material(GL_FRONT)
     draw_rect(x, y + 3.5, z, 19, 1, 10, 19, 1, 10, table_support_texture)
 
     # wood legs (3 x 8 x 3)
+    set_wood_support_material(GL_FRONT)
     draw_rect(x - 6, y, z - 2.5, 3, 8, 3, 3, 8, 3, table_support_texture)
     draw_rect(x + 6, y, z - 2.5, 3, 8, 3, 3, 8, 3, table_support_texture)
     draw_rect(x - 6, y, z + 2.5, 3, 8, 3, 3, 8, 3, table_support_texture)
     draw_rect(x + 6, y, z + 2.5, 3, 8, 3, 3, 8, 3, table_support_texture)
 
-def draw_plane(x_size, y_size, x_slices, y_slices, texture):
-    """ Draw a textured plane of the specified dimension.
+def draw_textured_plane(x_size, y_size, x_slices, y_slices, texture):
+    """ Draw a textured plane of the specified dimensions on the xy-plane.
         The plane is a unit square with lower left corner at origin.
     """
     glBindTexture(GL_TEXTURE_2D, texture)
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)           # try GL_NICEST/GL_FASTEST
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-
-    # set up felt to be brighter
-    if texture == felt_texture:
-        glMaterialfv(GL_FRONT, GL_AMBIENT, [0.5, 0.5, 0.5, 1.0])
-        glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
-        glMaterialfv(GL_FRONT, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
-        glMaterialf(GL_FRONT, GL_SHININESS, 10.0)
 
     # Enable/Disable each time or OpenGL ALWAYS expects texturing!
     glEnable(GL_TEXTURE_2D)
@@ -980,42 +965,42 @@ def draw_rect(x, y, z, x_size, y_size, z_size, x_slices, y_slices, z_slices, tex
     # Draw side 1 (+z)
     glPushMatrix()
     glTranslate(-x_size/2, -y_size/2, z_size/2)
-    draw_plane(x_size, y_size, x_slices, y_slices, texture_name)
+    draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name)
     glPopMatrix()
 
     # Draw side 2 (-z)
     glPushMatrix()
     glTranslate(x_size/2, -y_size/2, -z_size/2)
     glRotated(180, 0, 1, 0)
-    draw_plane(x_size, y_size, x_slices, y_slices, texture_name)
+    draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name)
     glPopMatrix()
 
     # Draw side 3 (-x)
     glPushMatrix()
     glTranslate(-x_size/2, -y_size/2, -z_size/2)
     glRotatef(-90, 0, 1, 0)
-    draw_plane(z_size, y_size, z_slices, y_slices, texture_name)
+    draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name)
     glPopMatrix()
 
     # Draw side 4 (+x)
     glPushMatrix()
     glTranslatef(x_size/2, -y_size/2, z_size/2)
     glRotatef(90, 0, 1, 0)
-    draw_plane(z_size, y_size, z_slices, y_slices, texture_name)
+    draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name)
     glPopMatrix()
 
     # Draw side 5 (-y)
     glPushMatrix()
     glTranslatef(-x_size/2, -y_size/2, -z_size/2)
     glRotatef(90, 1, 0, 0)
-    draw_plane(x_size, z_size, x_slices, z_slices, texture_name)
+    draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name)
     glPopMatrix()
 
     # Draw side 6 (+y)
     glPushMatrix()
     glTranslatef(-x_size/2, y_size/2, z_size/2)
     glRotatef(-90, 1, 0, 0)
-    draw_plane(x_size, z_size, x_slices, z_slices, texture_name)
+    draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name)
     glPopMatrix()
 
     # return
@@ -1061,7 +1046,7 @@ def draw_hanging_spotlight(x, y, z):
     # drawing the hanging light pole
     glTranslatef(0, -pole_height, 0)
     glRotatef(-90, 1, 0, 0)
-    set_aluminum(GL_FRONT_AND_BACK)
+    set_aluminum_material(GL_FRONT_AND_BACK)
     # parameters are: quadric, base radius, height radius, height, slices, stacks
     gluCylinder(tube, pole_radius, pole_radius, pole_height, 30, 10)
     glRotatef(90, 1, 0, 0)
@@ -1085,14 +1070,14 @@ def draw_hanging_spotlight(x, y, z):
     # parameters are: quadric, inner radius (imagine a donut), outer radius, slices, and rings
     # TODO: determine if this should be done manually
     glRotatef(-90, 1, 0, 0)
-    set_aluminum(GL_FRONT_AND_BACK)
+    set_aluminum_material(GL_FRONT_AND_BACK)
     gluDisk(disk, 0, upper_lamp_radius, 30, 10)
     glRotate(90, 1, 0, 0)
 
     # drawing the hanging light shade
     glTranslatef(0, -lamp_height, 0)
     glRotatef(-90, 1, 0, 0)
-    set_aluminum(GL_FRONT_AND_BACK)
+    set_aluminum_material(GL_FRONT_AND_BACK)
     gluCylinder(tube, lower_lamp_radius, upper_lamp_radius, lamp_height, 30, 10)
     glRotatef(90, 1, 0, 0)
 
@@ -1118,15 +1103,37 @@ def print_help_message():
 #   properties derived from: https://people.eecs.ku.edu/~jrmiller/Courses/672/InClass/3DLighting/MaterialProperties.html
 #   specifically the one for silver
 # face will be either GL_FRONT, GL_BACK, or GL_FRONT_AND_BACK
-def set_aluminum(face):
-    ambient = [ 0.19225, 0.19225, 0.19225, 1.0 ]
-    diffuse = [ 0.50754, 0.50754, 0.50754, 1.0 ]
-    specular = [ 0.508273, 0.508273, 0.508273, 1.0 ]
-    shininess = 51.2
-    glMaterialfv(face, GL_AMBIENT, ambient)
-    glMaterialfv(face, GL_DIFFUSE, diffuse)
-    glMaterialfv(face, GL_SPECULAR, specular)
-    glMaterialf(face, GL_SHININESS, shininess)
+def set_aluminum_material(face):
+    glMaterialfv(face, GL_AMBIENT, [ 0.19225, 0.19225, 0.19225, 1.0 ])
+    glMaterialfv(face, GL_DIFFUSE, [ 0.50754, 0.50754, 0.50754, 1.0 ])
+    glMaterialfv(face, GL_SPECULAR, [ 0.508273, 0.508273, 0.508273, 1.0 ])
+    glMaterialf(face, GL_SHININESS, 51.2)
+
+# helper method to set the material properties for the checkerboard floor
+def set_floor_material(face):
+    glMaterialfv(face, GL_AMBIENT, [0.4, 0.4, 0.4, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [0.6, 0.6, 0.6, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [0.0, 0.0, 0.0, 1.0])
+    glMaterialf(face, GL_SHININESS, 0.0)
+
+# helper method to set the material properties for the walls
+def set_wall_material(face):
+    glMaterialfv(face, GL_AMBIENT, [0.4, 0.4, 0.4, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [0.6, 0.6, 0.6, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [0.0, 0.0, 0.0, 1.0])
+    glMaterialf(face, GL_SHININESS, 0.0)
+
+# helper method to set the material properties for the checkerboard floor
+# TODO: double check values
+def set_felt_material(face):
+    glMaterialfv(face, GL_AMBIENT, [0.5, 0.5, 0.5, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(face, GL_SHININESS, 10.0)
+
+# helper method to set the material properties for the table supports
+def set_wood_support_material(face):
+    pass # TODO: find and implement
 
 #=======================================
 # Direct OpenGL Matrix Operation Examples
