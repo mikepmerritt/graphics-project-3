@@ -133,7 +133,7 @@ lights = [
     # Hanging light in center of the room
     Light(
         GL_LIGHT4, 
-        position=Point(0, 30, 0),
+        position=Point(0, 35, 0),
         enabled=False,
         ambient=[0.5, 0.5, 0.0, 1.0],  
         diffuse=[0.5, 0.5, 0.0, 1.0],
@@ -189,14 +189,14 @@ def init():
     running = True
 
     # loading / generating textures
-    wall_texture = load_texture("wall.jpg") 
-    table_top_texture = load_texture("table_top.jpg")
-    table_support_texture = load_texture("table_support.jpg")
-    lamp_support_texture = load_texture("lamp_support.jpg")
-    lamp_head_texture = load_texture("lamp_head.jpg")
-    aluminum_dark_texture = load_texture("HangingLamp_Dark.jpg")
-    aluminum_light_texture = load_texture("HangingLamp_Light.jpg")
-    felt_texture = load_texture("felt-temp.jpg")
+    wall_texture = load_texture("wall.jpg", 512) 
+    table_top_texture = load_texture("table_top.jpg", 512)
+    table_support_texture = load_texture("table_support.jpg", 512)
+    lamp_support_texture = load_texture("lamp_support.jpg", 512)
+    lamp_head_texture = load_texture("lamp_head.jpg", 512)
+    aluminum_dark_texture = load_texture("HangingLamp_Dark.jpg", 1024)
+    aluminum_light_texture = load_texture("HangingLamp_Light.jpg", 1024)
+    felt_texture = load_texture("felt-temp.jpg", 512)
     floor_texture = generate_checkerboard_texture(4, 4, 1, [[139, 69, 19, 255], [205, 133, 63, 255]]) 
 
     # loading / creating quadrics
@@ -342,6 +342,7 @@ def keyboard(event):
             dice_animating = True
             animate = True
 
+# function to set up the camera, lights, and world
 def draw_scene():
     """
     * draw_scene:
@@ -356,6 +357,7 @@ def draw_scene():
     place_lights()
     draw() 
 
+# function to set up the main lights in the room
 def place_lights():
     """Set up the main lights."""
     global lights
@@ -409,6 +411,7 @@ def place_lights():
                 glEnable(GL_LIGHTING)
                 glPopMatrix()
 
+# function to draw the actual elements and objects in the room
 def draw():
     glPushMatrix()
     # TODO: add function calls here
@@ -424,11 +427,12 @@ def draw():
     draw_cue_ball(0, 10.25, 0) 
     glPopMatrix()
     
-def load_texture(file_name):
+# helper function to load in textures with a given file and image size
+#   in order to preserve repeating patterns, the image is resized instead of cropped
+def load_texture(file_name, dim):
     im = Image.open(file_name)
-    dim = 512  
-    size = (0,0,dim,dim)
-    texture = im.crop(size).tobytes("raw")
+    size = (dim, dim)
+    texture = im.resize(size).tobytes("raw")
 
     texture_name = glGenTextures(1)
     glBindTexture(GL_TEXTURE_2D, texture_name)
@@ -436,6 +440,7 @@ def load_texture(file_name):
                  GL_UNSIGNED_BYTE, texture)
     return texture_name
 
+# helper function to create a checkerboard texture, used for the floor
 def generate_checkerboard_texture(nrows, ncols, block_size, block_colors):
     color_size = len(block_colors[0])
     if color_size != 4:
@@ -1102,7 +1107,6 @@ def draw_cue_ball(x, y, z):
     glPopMatrix()
 
 # TODO: implement swinging
-# TODO: uncertain if lights should have functions or be included in place_lights instead
 def draw_hanging_spotlight(x, y, z):
     # may need additional parameters for swinging
     glPushMatrix()
@@ -1192,10 +1196,10 @@ def set_aluminum(face):
     diffuse = [ 0.50754, 0.50754, 0.50754, 1.0 ]
     specular = [ 0.508273, 0.508273, 0.508273, 1.0 ]
     shininess = 51.2
-    glMaterialfv(face, GL_AMBIENT, ambient);
-    glMaterialfv(face, GL_DIFFUSE, diffuse);
-    glMaterialfv(face, GL_SPECULAR, specular);
-    glMaterialf(face, GL_SHININESS, shininess);
+    glMaterialfv(face, GL_AMBIENT, ambient)
+    glMaterialfv(face, GL_DIFFUSE, diffuse)
+    glMaterialfv(face, GL_SPECULAR, specular)
+    glMaterialf(face, GL_SHININESS, shininess)
 
 #=======================================
 # Direct OpenGL Matrix Operation Examples
