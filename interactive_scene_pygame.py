@@ -15,8 +15,13 @@ from OpenGL.GLU import *
 from OpenGL.GL import *
 from utils import *
 from camera import *
+from light import *
 from PIL import Image
 import random
+
+#=======================================
+# Initial data configuration + Global module variables
+#=======================================
 
 # These parameters define the camera's lens shape
 CAM_NEAR = 0.01
@@ -57,65 +62,10 @@ dice_rotation2 = [0, 0, 0]
 FPS = 60.0
 DELAY = int(1000.0 / FPS + 0.5)
 
-# Light state machine
-class Light:
-    # constructor
-    def __init__(
-        self, 
-        gl_light_name,                      # the light to be enabled (ex: GL_LIGHT0)
-        enabled=False,                      # boolean for if the light is on
-        position=Point(0, 10, 0),           # position of the light as a Point
-        ambient=[1.0, 1.0, 1.0, 1.0],       # ambient lighting values
-        diffuse=[1.0, 1.0, 1.0, 1.0],       # diffuse lighting values
-        specular=[1.0, 1.0, 1.0, 1.0],      # specular lighting values
-        direction=[0.0, -1.0, 0.0, 0.0],    # direction vector for spot lights
-        display_ball=True,                  # flag to draw a colored sphere at the point
-        is_point_light=False,               # flag to set light type as point
-        is_spot_light=False,                # flag to set light type as spot
-        is_directional_light=False,         # flag to set light type as directional
-        constant_attenuation=1,             # constant attenuation for distance
-        linear_attenuation=0,               # linear attenuation for distance
-        quadratic_attenuation=0,            # quadratic attenuation for distance
-        spot_cutoff=180.0,                  # how wide the spot light will be
-        spot_exponent=0.0                   # how focused the spot light will be
-    ):
-        # light display properties
-        self.gl_light_name = gl_light_name
-        self.enabled = enabled
-        self.display_ball = display_ball
-
-        # types of lights
-        self.is_point_light = is_point_light,
-        self.is_spot_light = is_spot_light,
-        self.is_directional_light = is_directional_light
-
-        # special light properties
-        self.constant_attenuation = constant_attenuation
-        self.linear_attenuation = linear_attenuation
-        self.quadratic_attenuation = quadratic_attenuation
-        self.spot_cutoff = spot_cutoff
-        self.spot_exponent = spot_exponent
-
-        # copy arrays / objects to prevent aliasing
-        self.position = copy.deepcopy(position)
-        self.ambient = copy.deepcopy(ambient)
-        self.diffuse = copy.deepcopy(diffuse)
-        self.specular = copy.deepcopy(specular)
-        self.direction = copy.deepcopy(direction)
-
-        # print an warning if the light was not configured with type
-        if not is_point_light and not is_spot_light and not is_directional_light:
-            print(f'Warning: Light {gl_light_name} was loaded without a type specified.')
-        
-    # used to get the position as 4 value list for glLightfv function
-    # constructs the list using the position Point and the is_point_light and is_directional_light value to determine if point light or directional light
-    def get_position_list(self):
-        return [ self.position.x, self.position.y, self.position.z, 1.0 if self.is_point_light and not self.is_directional_light else 0.0 ]
-
-# TODO: order is flashlight, overhead red, overhead green, overhead blue, hanging light (50% yellow) + flicker, desk lamp (75% white)
+# all lights in the scene
+# order is flashlight (100% white), overhead red, overhead green, overhead blue, hanging light (50% yellow) + flicker, desk lamp (75% white)
 lights = [ 
-    # Debug light in the center of the room with pure white, used to test textures and whatnot
-    # TODO: replace with flashlight position
+    # TODO: update flashlight position and direction with camera
     Light(
         GL_LIGHT0, 
         enabled=True,
@@ -196,12 +146,14 @@ lights = [
     ),
 ]
 
-# Global (Module) Variables
-
 # Window data
 window_dimensions = (1000, 800)
 name = b'Project 2'
 animate = False
+
+#==============================
+# OpenGL and Scene Setup
+#==============================
 
 def main():
     init()
@@ -269,6 +221,46 @@ def init():
     glEnable(GL_LIGHTING)
     glEnable(GL_NORMALIZE)    # Inefficient...
     glEnable(GL_DEPTH_TEST)   # For z-buffering!
+
+# helper function to load in textures with a given file and image size
+#   in order to preserve repeating patterns, the image is resized instead of cropped
+def load_texture(file_name, dim):
+    im = Image.open(file_name)
+    size = (dim, dim)
+    texture = im.resize(size).tobytes("raw")
+
+    texture_name = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, texture_name)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, dim, dim, 0, GL_RGB,
+                 GL_UNSIGNED_BYTE, texture)
+    return texture_name
+
+# helper function to create a checkerboard texture, used for the floor
+def generate_checkerboard_texture(nrows, ncols, block_size, block_colors):
+    color_size = len(block_colors[0])
+    if color_size != 4:
+        print("Error: Currently only RGBA supported here. Texture not generated.")
+        return None
+
+    texture = [0]*(nrows*ncols*block_size*block_size*color_size)
+    idx = 0
+    for i in range(nrows):
+        for ib in range(block_size):
+            for j in range(ncols):
+                color = block_colors[(i+j)%len(block_colors)]
+                for jb in range(block_size):
+                    for c in color:
+                        texture[idx] = c
+                        idx += 1
+
+    texture_name = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, texture_name)
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                 ncols*block_size, 
+                 nrows*block_size, 
+                 0, GL_RGBA, 
+                 GL_UNSIGNED_BYTE, texture)
+    return texture_name
 
 def main_loop():
     global running, clock, animate
@@ -476,46 +468,6 @@ def draw_objects():
     draw_cue_ball(0, 10.25, 0) 
     glPopMatrix()
     
-# helper function to load in textures with a given file and image size
-#   in order to preserve repeating patterns, the image is resized instead of cropped
-def load_texture(file_name, dim):
-    im = Image.open(file_name)
-    size = (dim, dim)
-    texture = im.resize(size).tobytes("raw")
-
-    texture_name = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, texture_name)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, dim, dim, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, texture)
-    return texture_name
-
-# helper function to create a checkerboard texture, used for the floor
-def generate_checkerboard_texture(nrows, ncols, block_size, block_colors):
-    color_size = len(block_colors[0])
-    if color_size != 4:
-        print("Error: Currently only RGBA supported here. Texture not generated.")
-        return None
-
-    texture = [0]*(nrows*ncols*block_size*block_size*color_size)
-    idx = 0
-    for i in range(nrows):
-        for ib in range(block_size):
-            for j in range(ncols):
-                color = block_colors[(i+j)%len(block_colors)]
-                for jb in range(block_size):
-                    for c in color:
-                        texture[idx] = c
-                        idx += 1
-
-    texture_name = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, texture_name)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                 ncols*block_size, 
-                 nrows*block_size, 
-                 0, GL_RGBA, 
-                 GL_UNSIGNED_BYTE, texture)
-    return texture_name
-
 #=======================================
 # Scene-drawing functions
 #=======================================
