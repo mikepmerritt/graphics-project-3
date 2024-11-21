@@ -76,6 +76,23 @@ class Camera:
         self.eye.x += du * u.dx + dn * n.dx
         self.eye.y += dv
         self.eye.z += du * u.dz + dn * n.dz
+
+        # TODO: find a more efficient way to do bounds checking
+        # forcing the camera in the room boundaries
+        self.eye.x = min(self.eye.x, self.max_room_bound_x - 1)
+        self.eye.x = max(self.eye.x, self.min_room_bound_x + 1)
+        self.eye.z = min(self.eye.z, self.max_room_bound_z - 1)
+        self.eye.z = max(self.eye.z, self.min_room_bound_z + 1)
+
+        # TODO: find a more efficient way to do bounds checking
+        # force the camera off of the walls of objects
+        # TODO: fix issue causing camera to get stuck in objects
+        # for ((min_obj_bound_x, min_obj_bound_z), (max_obj_bound_x, max_obj_bound_z)) in self.obstacle_bounding_boxes:
+        #     if self.eye.x <= max_obj_bound_x + 1 and self.eye.x >= min_obj_bound_x - 1 and self.eye.z <= max_obj_bound_z + 1 and self.eye.z >= min_obj_bound_z - 1:
+        #         self.eye.x = max(self.eye.x, max_obj_bound_x - 1)
+        #         self.eye.x = min(self.eye.x, min_obj_bound_x + 1)
+        #         self.eye.z = max(self.eye.z, max_obj_bound_z - 1)
+        #         self.eye.z = min(self.eye.z, min_obj_bound_z + 1)
     
     def turn(self, angle):
         """ Turn the camera by the given angle"""
@@ -89,9 +106,15 @@ class Camera:
         
         # TODO: if updating up axis, can support 90 degree angles
         # clamping the angle between -90 and 90
-        # TODO: determine if this is the correct way to do this
         resultant_angle = min(89, resultant_angle)
         resultant_angle = max(-89, resultant_angle)
 
         self.pitchAngle = resultant_angle
         
+    def add_obstacle_bounding_boxes(self, boxes):
+        """ Load all object bounding boxes for collision detection. """
+        self.obstacle_bounding_boxes = boxes
+
+    def add_room_boundaries(self, bounds):
+        """ Load room bounding bounds for collision detection. """
+        ((self.min_room_bound_x, self.min_room_bound_z), (self.max_room_bound_x, self.max_room_bound_z)) = bounds

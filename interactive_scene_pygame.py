@@ -168,6 +168,15 @@ lights = [
     ),
 ]
 
+# Bounding box for room (xz-plane only)
+room_bounds = ((-40, -40), (40, 40))
+
+# Bounding boxes for obstacles (xz-plane only)
+obstacles = [
+    ((-39, -37), (-31, -31)),   # Side table boundaries
+    ((-9, -5), (9, 5)),         # Pool table boundaries
+]
+
 # Window data
 window_dimensions = (1000, 800)
 name = b'Project 2'
@@ -183,6 +192,8 @@ def main():
     camera.eye = Point(0, 15, 40)  # Position the camera
     camera.look = Point(0, 0, 0)  # Look at the center of the scene
     camera.up = Vector(Point(0, 1, 0))  # Set up vector
+    camera.add_room_boundaries(room_bounds) # Add bounding box for room
+    camera.add_obstacle_bounding_boxes(obstacles) # Add bounding boxes for objects
 
     # Enters the main loop.   
     # Displays the window and starts listening for events.
