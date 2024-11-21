@@ -73,26 +73,31 @@ class Camera:
         u = n.cross(v)
         u.normalize()
         
-        self.eye.x += du * u.dx + dn * n.dx
-        self.eye.y += dv
-        self.eye.z += du * u.dz + dn * n.dz
+        new_x = self.eye.x + du * u.dx + dn * n.dx
+        new_y = self.eye.y + dv
+        new_z = self.eye.z + du * u.dz + dn * n.dz
 
         # TODO: find a more efficient way to do bounds checking
         # forcing the camera in the room boundaries
-        self.eye.x = min(self.eye.x, self.max_room_bound_x - 1)
-        self.eye.x = max(self.eye.x, self.min_room_bound_x + 1)
-        self.eye.z = min(self.eye.z, self.max_room_bound_z - 1)
-        self.eye.z = max(self.eye.z, self.min_room_bound_z + 1)
+        new_x = min(new_x, self.max_room_bound_x - 1)
+        new_x = max(new_x, self.min_room_bound_x + 1)
+        new_z = min(new_z, self.max_room_bound_z - 1)
+        new_z = max(new_z, self.min_room_bound_z + 1)
 
         # TODO: find a more efficient way to do bounds checking
         # force the camera off of the walls of objects
         # TODO: fix issue causing camera to get stuck in objects
-        # for ((min_obj_bound_x, min_obj_bound_z), (max_obj_bound_x, max_obj_bound_z)) in self.obstacle_bounding_boxes:
-        #     if self.eye.x <= max_obj_bound_x + 1 and self.eye.x >= min_obj_bound_x - 1 and self.eye.z <= max_obj_bound_z + 1 and self.eye.z >= min_obj_bound_z - 1:
-        #         self.eye.x = max(self.eye.x, max_obj_bound_x - 1)
-        #         self.eye.x = min(self.eye.x, min_obj_bound_x + 1)
-        #         self.eye.z = max(self.eye.z, max_obj_bound_z - 1)
-        #         self.eye.z = min(self.eye.z, min_obj_bound_z + 1)
+        for ((min_obj_bound_x, min_obj_bound_z), (max_obj_bound_x, max_obj_bound_z)) in self.obstacle_bounding_boxes:
+            if new_x <= max_obj_bound_x + 1 and new_x >= min_obj_bound_x - 1 and new_z <= max_obj_bound_z + 1 and new_z >= min_obj_bound_z - 1:
+                move_direction_x = new_x - self.eye.x
+                move_direction_z = new_z - self.eye.y
+
+                # drawing the line between old position and new position
+                # TODO: see textbook and phone for calculations
+
+        self.eye.x = new_x
+        self.eye.y = new_y
+        self.eye.z = new_z
     
     def turn(self, angle):
         """ Turn the camera by the given angle"""
