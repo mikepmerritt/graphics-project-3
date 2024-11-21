@@ -23,6 +23,9 @@ CAM_NEAR = 0.01
 CAM_FAR = 1000.0
 CAM_ANGLE = 60.0
 
+# camera position at start
+start_camera_position = Point(0, 15, 40)
+
 # quadrics used for curved shapes
 tube = None
 ball = None
@@ -38,6 +41,12 @@ lamp_head_texture = None
 aluminum_light_texture = None
 aluminum_dark_texture = None
 felt_texture = None
+dice_texture_1 = None
+dice_texture_2 = None
+dice_texture_3 = None
+dice_texture_4 = None
+dice_texture_5 = None
+dice_texture_6 = None
 
 # scene-specific state information
 dice_animating = False
@@ -53,26 +62,39 @@ class Light:
     # constructor
     def __init__(
         self, 
-        gl_light_name, 
-        position=Point(0, 10, 0), 
-        enabled=False, 
-        ambient=[1.0, 1.0, 1.0, 1.0], 
-        diffuse=[1.0, 1.0, 1.0, 1.0], 
-        specular=[1.0, 1.0, 1.0, 1.0], 
-        is_point=True,
-        display_ball=True,
-        lv=False,
-        two_side=True,
-        direction=[0.0, -1.0, 0.0, 0.0],
-        is_spotlight=True
+        gl_light_name,                      # the light to be enabled (ex: GL_LIGHT0)
+        enabled=False,                      # boolean for if the light is on
+        position=Point(0, 10, 0),           # position of the light as a Point
+        ambient=[1.0, 1.0, 1.0, 1.0],       # ambient lighting values
+        diffuse=[1.0, 1.0, 1.0, 1.0],       # diffuse lighting values
+        specular=[1.0, 1.0, 1.0, 1.0],      # specular lighting values
+        direction=[0.0, -1.0, 0.0, 0.0],    # direction vector for spot lights
+        display_ball=True,                  # flag to draw a colored sphere at the point
+        is_point_light=False,               # flag to set light type as point
+        is_spot_light=False,                # flag to set light type as spot
+        is_directional_light=False,         # flag to set light type as directional
+        constant_attenuation=1,             # constant attenuation for distance
+        linear_attenuation=0,               # linear attenuation for distance
+        quadratic_attenuation=0,            # quadratic attenuation for distance
+        spot_cutoff=180.0,                  # how wide the spot light will be
+        spot_exponent=0.0                   # how focused the spot light will be
     ):
+        # light display properties
         self.gl_light_name = gl_light_name
         self.enabled = enabled
-        self.is_point = is_point
         self.display_ball = display_ball
-        self.lv = lv
-        self.two_side = two_side
-        self.is_spotlight = is_spotlight
+
+        # types of lights
+        self.is_point_light = is_point_light,
+        self.is_spot_light = is_spot_light,
+        self.is_directional_light = is_directional_light
+
+        # special light properties
+        self.constant_attenuation = constant_attenuation
+        self.linear_attenuation = linear_attenuation
+        self.quadratic_attenuation = quadratic_attenuation
+        self.spot_cutoff = spot_cutoff
+        self.spot_exponent = spot_exponent
 
         # copy arrays / objects to prevent aliasing
         self.position = copy.deepcopy(position)
@@ -80,11 +102,15 @@ class Light:
         self.diffuse = copy.deepcopy(diffuse)
         self.specular = copy.deepcopy(specular)
         self.direction = copy.deepcopy(direction)
+
+        # print an warning if the light was not configured with type
+        if not is_point_light and not is_spot_light and not is_directional_light:
+            print(f'Warning: Light {gl_light_name} was loaded without a type specified.')
         
     # used to get the position as 4 value list for glLightfv function
-    # constructs the list using the position Point and the is_point value to determine if point light or directional light
+    # constructs the list using the position Point and the is_point_light and is_directional_light value to determine if point light or directional light
     def get_position_list(self):
-        return [ self.position.x, self.position.y, self.position.z, 1.0 if self.is_point else 0.0 ]
+        return [ self.position.x, self.position.y, self.position.z, 1.0 if self.is_point_light and not self.is_directional_light else 0.0 ]
 
 # TODO: order is flashlight, overhead red, overhead green, overhead blue, hanging light (50% yellow) + flicker, desk lamp (75% white)
 lights = [ 
@@ -92,63 +118,81 @@ lights = [
     # TODO: replace with flashlight position
     Light(
         GL_LIGHT0, 
-        position=Point(0, 0, 0),
-        enabled=False,
+        enabled=True,
+        position=copy.deepcopy(start_camera_position), # flashlight starts where player is
         ambient=[1.0, 1.0, 1.0, 1.0],  
         diffuse=[1.0, 1.0, 1.0, 1.0],
         specular=[1.0, 1.0, 1.0, 1.0],
-        is_spotlight=False
+        direction=[0.0, 0.0, -1.0, 0.0],
+        display_ball=True,
+        is_spot_light=True,
+        constant_attenuation=100,
+        linear_attenuation=0.1,
+        quadratic_attenuation=0,
+        spot_cutoff=30,
+        spot_exponent=15
     ),
     # Red light in far-left quarter of room
     Light(
         GL_LIGHT1, 
-        position=Point(20, 40, -20),
         enabled=False,
+        position=Point(20, 40, -20),
         ambient=[1.0, 0.0, 0.0, 1.0],  
         diffuse=[1.0, 0.0, 0.0, 1.0],
         specular=[1.0, 0.0, 0.0, 1.0],
-        display_ball=True
+        display_ball=True,
+        is_point_light=True # TODO: determine if this is the correct type
     ),
     # Green light in left-center area of room
     Light(
         GL_LIGHT2, 
-        position=Point(-20, 40, 0),
         enabled=False,
+        position=Point(-20, 40, 0),
         ambient=[0.0, 1.0, 0.0, 1.0],  
         diffuse=[0.0, 1.0, 0.0, 1.0],
         specular=[0.0, 1.0, 0.0, 1.0],
-        display_ball=True
+        display_ball=True,
+        is_point_light=True # TODO: determine if this is the correct type
     ),
     # Blue light in close-right quarter of room
     Light(
         GL_LIGHT3, 
-        position=Point(20, 40, 20),
         enabled=False,
+        position=Point(20, 40, 20),
         ambient=[0.0, 0.0, 1.0, 1.0],  
         diffuse=[0.0, 0.0, 1.0, 1.0],
         specular=[0.0, 0.0, 1.0, 1.0],
-        display_ball=True
+        display_ball=True,
+        is_point_light=True # TODO: determine if this is the correct type
     ),
 
     # Hanging light in center of the room
     Light(
         GL_LIGHT4, 
-        position=Point(0, 35, 0),
         enabled=False,
+        position=Point(0, 35, 0), # hanging light y-value is 40 - 5 (room height - pole height)
         ambient=[0.5, 0.5, 0.0, 1.0],  
         diffuse=[0.5, 0.5, 0.0, 1.0],
         specular=[0.5, 0.5, 0.0, 1.0],
-        display_ball=True
+        direction=[0.0, -1.0, 0.0, 0.0],
+        display_ball=True,
+        is_spot_light=True,
+        spot_cutoff=90.0,
+        spot_exponent=10
     ),
     # Lamp in far right-corner of room
     Light(
         GL_LIGHT5, 
-        position=Point(-32, 11.2, -36), # lamp y-value is 8 + 4 - 1/2 (1.6) (table height + pole height + 1/2 shade height)
         enabled=False,
+        position=Point(-32, 11.2, -36), # lamp y-value is 8 + 4 - 1/2 (1.6) (table height + pole height + 1/2 shade height)
         ambient=[0.75, 0.75, 0.75, 1.0],  
         diffuse=[0.75, 0.75, 0.75, 1.0],
         specular=[0.75, 0.75, 0.75, 1.0],
-        display_ball=True
+        direction=[0.0, -1.0, 0.0, 0.0],
+        display_ball=True,
+        is_spot_light=True,
+        spot_cutoff=90.0,
+        spot_exponent=10
     ),
 ]
 
@@ -179,7 +223,7 @@ def init():
     # quadrics
     global tube, ball, disk
     # textures
-    global floor_texture, wall_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture
+    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture
 
     # pygame setup
     pygame.init()
@@ -197,6 +241,12 @@ def init():
     aluminum_dark_texture = load_texture("HangingLamp_Dark.jpg", 1024)
     aluminum_light_texture = load_texture("HangingLamp_Light.jpg", 1024)
     felt_texture = load_texture("felt-temp.jpg", 512)
+    dice_texture_1 = load_texture("dice_1.jpg", 512)
+    dice_texture_2 = load_texture("dice_2.jpg", 512)
+    dice_texture_3 = load_texture("dice_3.jpg", 512)
+    dice_texture_4 = load_texture("dice_4.jpg", 512)
+    dice_texture_5 = load_texture("dice_5.jpg", 512)
+    dice_texture_6 = load_texture("dice_6.jpg", 512)
     floor_texture = generate_checkerboard_texture(4, 4, 1, [[139, 69, 19, 255], [205, 133, 63, 255]]) 
 
     # loading / creating quadrics
@@ -355,7 +405,7 @@ def draw_scene():
     # Now transform the world
     glColor3f(1, 1, 1)
     place_lights()
-    draw() 
+    draw_objects() 
 
 # function to set up the main lights in the room
 def place_lights():
@@ -375,7 +425,7 @@ def place_lights():
             glMatrixMode(GL_MODELVIEW)
 
             # For each light, set position, ambient, diffuse, and specular values using class
-            # Note that light.position is not valid for GL_POSITION, as it is a point and not a list
+            #   note: light.position is not valid for GL_POSITION, as it is a point and not a list
             glLightfv(light.gl_light_name, GL_POSITION, light.get_position_list())
             glLightfv(light.gl_light_name, GL_AMBIENT, light.ambient)
             glLightfv(light.gl_light_name, GL_DIFFUSE, light.diffuse)
@@ -383,21 +433,17 @@ def place_lights():
 
             # Constant attenuation (for distance, etc.)
             # Only works for fixed light locations!  Otherwise disabled
-            glLightf(light.gl_light_name, GL_CONSTANT_ATTENUATION, 1.0)
-            glLightf(light.gl_light_name, GL_LINEAR_ATTENUATION, 0.0)
-            glLightf(light.gl_light_name, GL_QUADRATIC_ATTENUATION, 0.000)
+            glLightf(light.gl_light_name, GL_CONSTANT_ATTENUATION, light.constant_attenuation)
+            glLightf(light.gl_light_name, GL_LINEAR_ATTENUATION, light.linear_attenuation)
+            glLightf(light.gl_light_name, GL_QUADRATIC_ATTENUATION, light.quadratic_attenuation)
 
             # Create a spotlight effect (none at the moment)
-            if light.is_spotlight:
-                glLightf(light.gl_light_name, GL_SPOT_CUTOFF,45.0)
-                glLightf(light.gl_light_name, GL_SPOT_EXPONENT, 2.0)
+            #   note: if not a spot light, these values should be 180.0 and 0.0, meaning they have no effect
+            glLightf(light.gl_light_name, GL_SPOT_CUTOFF, light.spot_cutoff) 
+            glLightf(light.gl_light_name, GL_SPOT_EXPONENT, light.spot_exponent)
+            # Attach direction to spot lights only
+            if light.is_spot_light:
                 glLightfv(light.gl_light_name, GL_SPOT_DIRECTION, light.direction)
-            else:
-                glLightf(light.gl_light_name, GL_SPOT_CUTOFF,180.0)
-                glLightf(light.gl_light_name, GL_SPOT_EXPONENT, 0.0)
-                
-            glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE if light.lv else GL_FALSE)
-            glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE if light.two_side else GL_FALSE)
 
             glEnable(light.gl_light_name)
 
@@ -411,8 +457,11 @@ def place_lights():
                 glEnable(GL_LIGHTING)
                 glPopMatrix()
 
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE) # draw specular reflections relative to camera direction
+    glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE) # light both sides of a shape
+
 # function to draw the actual elements and objects in the room
-def draw():
+def draw_objects():
     glPushMatrix()
     # TODO: add function calls here
     draw_floor()
@@ -797,77 +846,6 @@ def draw_desk_lamp(x, y, z):
     
     glPopMatrix()
 
-def draw_dice_face_dots(face_number):
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [0, 0, 0, 1.0])
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0, 0, 0, 1.0])
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.3, 0.3, 0.3, 1.0])
-    glMaterialf(GL_FRONT, GL_SHININESS, 32.0)
-    
-    dot_radius = 0.02 
-    offset = 0.1     
-
-    if face_number == 1:
-        glPushMatrix()
-        glTranslatef(0, 0, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-    elif face_number == 2:
-        glPushMatrix()
-        glTranslatef(offset, offset, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-        glPushMatrix()
-        glTranslatef(-offset, -offset, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-    elif face_number == 3:
-        glPushMatrix()
-        glTranslatef(0, 0, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-        glPushMatrix()
-        glTranslatef(offset, offset, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-        glPushMatrix()
-        glTranslatef(-offset, -offset, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-    elif face_number == 4:
-        for x in [offset, -offset]:
-            for y in [offset, -offset]:
-                glPushMatrix()
-                glTranslatef(x, y, 0)
-                gluSphere(ball, dot_radius, 16, 16)
-                glPopMatrix()
-                
-    elif face_number == 5:
-        glPushMatrix()
-        glTranslatef(0, 0, 0)
-        gluSphere(ball, dot_radius, 16, 16)
-        glPopMatrix()
-        
-        for x in [offset, -offset]:
-            for y in [offset, -offset]:
-                glPushMatrix()
-                glTranslatef(x, y, 0)
-                gluSphere(ball, dot_radius, 16, 16)
-                glPopMatrix()
-                
-    elif face_number == 6:
-        for x in [offset, -offset]:
-            for y in [offset, 0, -offset]:
-                glPushMatrix()
-                glTranslatef(x, y, 0)
-                gluSphere(ball, dot_radius, 16, 16)
-                glPopMatrix()
-
 def draw_single_dice(x, y, z, size, rotations=[0,0,0]):
     glPushMatrix()
     glTranslatef(x, y, z)   
@@ -875,89 +853,86 @@ def draw_single_dice(x, y, z, size, rotations=[0,0,0]):
     glRotatef(rotations[1], 0, 1, 0)
     glRotatef(rotations[2], 0, 0, 1) 
     
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.2, 0, 0, 1.0])
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0, 0, 1.0])
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.3, 0.3, 0.3, 1.0])
-    glMaterialf(GL_FRONT, GL_SHININESS, 32.0)
+    glMaterialfv(GL_FRONT, GL_AMBIENT, [1.0, 1.0, 1.0, 1.0])
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, [1.0, 1.0, 1.0, 1.0])
+    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(GL_FRONT, GL_SHININESS, 0.0)
     
+    glEnable(GL_TEXTURE_2D)
+    
+    def set_texture_params():
+        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    
+    glBindTexture(GL_TEXTURE_2D, dice_texture_1)
+    set_texture_params()
     glBegin(GL_QUADS)
-    
     glNormal3f(0, 0, 1)
-    glVertex3f(-size, -size, size)
-    glVertex3f(size, -size, size)
-    glVertex3f(size, size, size)
-    glVertex3f(-size, size, size)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, size)
+    glTexCoord2f(1.0, 0.0); glVertex3f(size, -size, size)
+    glTexCoord2f(1.0, 1.0); glVertex3f(size, size, size)
+    glTexCoord2f(0.0, 1.0); glVertex3f(-size, size, size)
+    glEnd()
     
+    glBindTexture(GL_TEXTURE_2D, dice_texture_6)
+    set_texture_params()
+    glBegin(GL_QUADS)
     glNormal3f(0, 0, -1)
-    glVertex3f(-size, -size, -size)
-    glVertex3f(-size, size, -size)
-    glVertex3f(size, size, -size)
-    glVertex3f(size, -size, -size)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, -size)
+    glTexCoord2f(1.0, 0.0); glVertex3f(-size, size, -size)
+    glTexCoord2f(1.0, 1.0); glVertex3f(size, size, -size)
+    glTexCoord2f(0.0, 1.0); glVertex3f(size, -size, -size)
+    glEnd()
     
+    glBindTexture(GL_TEXTURE_2D, dice_texture_2)
+    set_texture_params()
+    glBegin(GL_QUADS)
     glNormal3f(1, 0, 0)
-    glVertex3f(size, -size, -size)
-    glVertex3f(size, size, -size)
-    glVertex3f(size, size, size)
-    glVertex3f(size, -size, size)
+    glTexCoord2f(0.0, 0.0); glVertex3f(size, -size, -size)
+    glTexCoord2f(1.0, 0.0); glVertex3f(size, size, -size)
+    glTexCoord2f(1.0, 1.0); glVertex3f(size, size, size)
+    glTexCoord2f(0.0, 1.0); glVertex3f(size, -size, size)
+    glEnd()
     
+    glBindTexture(GL_TEXTURE_2D, dice_texture_5)
+    set_texture_params()
+    glBegin(GL_QUADS)
     glNormal3f(-1, 0, 0)
-    glVertex3f(-size, -size, -size)
-    glVertex3f(-size, -size, size)
-    glVertex3f(-size, size, size)
-    glVertex3f(-size, size, -size)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, -size)
+    glTexCoord2f(1.0, 0.0); glVertex3f(-size, -size, size)
+    glTexCoord2f(1.0, 1.0); glVertex3f(-size, size, size)
+    glTexCoord2f(0.0, 1.0); glVertex3f(-size, size, -size)
+    glEnd()
     
+    glBindTexture(GL_TEXTURE_2D, dice_texture_3)
+    set_texture_params()
+    glBegin(GL_QUADS)
     glNormal3f(0, 1, 0)
-    glVertex3f(-size, size, -size)
-    glVertex3f(-size, size, size)
-    glVertex3f(size, size, size)
-    glVertex3f(size, size, -size)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-size, size, -size)
+    glTexCoord2f(1.0, 0.0); glVertex3f(-size, size, size)
+    glTexCoord2f(1.0, 1.0); glVertex3f(size, size, size)
+    glTexCoord2f(0.0, 1.0); glVertex3f(size, size, -size)
+    glEnd()
     
+    glBindTexture(GL_TEXTURE_2D, dice_texture_4)
+    set_texture_params()
+    glBegin(GL_QUADS)
     glNormal3f(0, -1, 0)
-    glVertex3f(-size, -size, -size)
-    glVertex3f(size, -size, -size)
-    glVertex3f(size, -size, size)
-    glVertex3f(-size, -size, size)
+    glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, -size)
+    glTexCoord2f(1.0, 0.0); glVertex3f(size, -size, -size)
+    glTexCoord2f(1.0, 1.0); glVertex3f(size, -size, size)
+    glTexCoord2f(0.0, 1.0); glVertex3f(-size, -size, size)
+    glEnd()
     
-    glEnd()    
-    glPushMatrix()
-    glTranslatef(0, 0, size + 0.001)  
-    draw_dice_face_dots(1)
-    glPopMatrix()
-    
-    glPushMatrix()
-    glTranslatef(0, 0, -(size + 0.001))  
-    draw_dice_face_dots(6)
-    glPopMatrix()
-    
-    glPushMatrix()
-    glTranslatef(size + 0.001, 0, 0)  
-    glRotatef(90, 0, 1, 0)
-    draw_dice_face_dots(2)
-    glPopMatrix()
-    
-    glPushMatrix()
-    glTranslatef(-(size + 0.001), 0, 0)  
-    glRotatef(-90, 0, 1, 0)
-    draw_dice_face_dots(5)
-    glPopMatrix()
-    
-    glPushMatrix()
-    glTranslatef(0, size + 0.001, 0)  
-    glRotatef(-90, 1, 0, 0)
-    draw_dice_face_dots(3)
-    glPopMatrix()
-    
-    glPushMatrix()
-    glTranslatef(0, -(size + 0.001), 0)  
-    glRotatef(90, 1, 0, 0)
-    draw_dice_face_dots(4)
-    glPopMatrix()
-    
+    glDisable(GL_TEXTURE_2D)
     glPopMatrix()
 
 def draw_dice(x, y, z):
     draw_single_dice(x, y, z, 0.2, dice_rotation)
-    draw_single_dice(x + 1.2, y, z + 0.3, 0.2, dice_rotation2)
+    draw_single_dice(x + 1.2, y, z + 0.2, 0.2, dice_rotation2)
 
 # TODO: implement
 def draw_pool_table(x, y, z):
