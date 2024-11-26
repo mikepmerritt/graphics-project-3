@@ -88,10 +88,10 @@ lights = [
         diffuse=[1.0, 1.0, 1.0, 1.0],
         specular=[1.0, 1.0, 1.0, 1.0],
         direction=[0.0, 0.0, -1.0, 0.0],
-        display_ball=True,
+        display_ball=False,
         is_spot_light=True,
-        constant_attenuation=100,
-        linear_attenuation=0.1,
+        constant_attenuation=1,
+        linear_attenuation=0.01,
         quadratic_attenuation=0,
         spot_cutoff=30,
         spot_exponent=15
@@ -448,6 +448,14 @@ def advance():
 
     # print(f'Swinging: \t{light_swinging}, Angle: {light_swing_angle}')
     # print(f'Light Pos: {lights[4].position}, Light Direction: {lights[4].direction}')
+
+    # Flashlight updating
+
+    # calculate the direction using vector between camera location and look at point 
+    camera_direction = Vector(camera.eye, camera.get_look_at_point())
+
+    lights[0].position = copy.deepcopy(camera.eye)
+    lights[0].direction = [camera_direction.dx, camera_direction.dy, camera_direction.dz, 0.0]
 
 # Function used to handle any key events
 # event: The keyboard event that happened

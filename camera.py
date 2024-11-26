@@ -115,6 +115,16 @@ class Camera:
         resultant_angle = max(-89, resultant_angle)
 
         self.pitchAngle = resultant_angle
+
+    def get_look_at_point(self):
+        # Compute the look at point based on the turn angle
+        rad = math.radians(self.lookAngle)
+        pitch_rad = math.radians(self.pitchAngle)
+        lookX = self.eye.x - math.sin(rad) * math.cos(pitch_rad)
+        lookY = self.eye.y - math.sin(pitch_rad)
+        lookZ = self.eye.z - math.cos(rad) * math.cos(pitch_rad)
+
+        return Point(lookX, lookY, lookZ)
         
     def add_obstacle_bounding_boxes(self, boxes):
         """ Load all object bounding boxes for collision detection. """
