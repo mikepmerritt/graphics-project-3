@@ -1121,8 +1121,57 @@ def draw_corner(x, y, z):
 
     # felt entryway
 
-    # black bottom circle
+    glPushMatrix()
 
+    set_felt_material(GL_FRONT)
+    glBindTexture(GL_TEXTURE_2D, felt_texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+
+    glNormal3f(0, 1, 0)
+
+    glBegin(GL_TRIANGLE_FAN)
+    glTexCoord2f(1.5, -1.5)
+    glVertex3f(1.5, 0.25, -1.5)
+    glTexCoord2f(1.5, 0)
+    glVertex3f(1.5, 0.25, 0)
+
+    dtheta = math.pi / 4
+    theta = math.pi / 2
+
+    while theta < math.pi:
+        vx = math.sin(theta)
+        vz = math.cos(theta)
+
+        glTexCoord2f(vx, vz)
+        glVertex3f(vx, 0.25, vz) # point on circle
+
+        theta += dtheta
+
+    theta = math.pi # end goal
+    vx = math.sin(theta)
+    vz = math.cos(theta)
+
+    glTexCoord2f(vx, vz)
+    glVertex3f(vx, 0.25, vz) # last point on circle
+
+    glTexCoord2f(0, -1.5)
+    glVertex3f(0, 0.25, -1.5)
+
+    glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
+
+    # black cylinder liner (outer)
     dtheta = math.pi / 4
     theta = math.pi
 
@@ -1150,9 +1199,33 @@ def draw_corner(x, y, z):
 
     glDisable(GL_TEXTURE_2D)
 
-    # black back arc liner
+    # black cylinder liner (inner)
+    dtheta = math.pi / 4
+    theta = math.pi / 2
 
-    # black front arc liner
+    prev = (math.sin(theta), math.cos(theta)) # first/start point for panel
+
+    while theta < math.pi:
+        theta += dtheta # go to second point in panel
+
+        vx = math.sin(theta)
+        vz = math.cos(theta)
+
+        curr = (vx, vz)
+
+        # draw the panel
+        size = math.sqrt((curr[0] - prev[0])**2 + (curr[1] - prev[1])**2)
+
+        glPushMatrix()
+        glTranslate(prev[0], -0.75, prev[1])
+        glRotatef(-90, 0, 1, 0)
+        glRotatef((3 * math.pi/8 + theta) * 180 / math.pi, 0, 1, 0)
+        draw_textured_plane(size, 1, 3, 3, felt_texture)
+        glPopMatrix()
+
+        prev = (vx, vz)
+
+    glDisable(GL_TEXTURE_2D)
 
     glPopMatrix()
 
