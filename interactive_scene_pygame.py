@@ -1014,28 +1014,28 @@ def draw_corner(x, y, z):
     glTranslate(x, y, z) 
 
     # cylinder
-    glPushMatrix()
+    # glPushMatrix()
 
-    glBindTexture(GL_TEXTURE_2D, table_support_texture)
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+    # glBindTexture(GL_TEXTURE_2D, table_support_texture)
+    # glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
+    # glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
+    # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
+    # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
+    # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
 
-    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
-    glEnable(GL_TEXTURE_2D)
+    # # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    # glEnable(GL_TEXTURE_2D)
 
-    # parameters are: quadric, base radius, height radius, height, slices, stacks
-    glTranslate(0, 0.75, 0)
-    glRotatef(90, 1, 0, 0)
-    gluCylinder(tube, 1, 1, 1.5, 30, 10)
+    # # parameters are: quadric, base radius, height radius, height, slices, stacks
+    # glTranslate(0, 0.75, 0)
+    # glRotatef(90, 1, 0, 0)
+    # gluCylinder(tube, 1, 1, 1.5, 30, 10)
 
-    # Disabling texturing mode to switch texture
-    glDisable(GL_TEXTURE_2D)
+    # # Disabling texturing mode to switch texture
+    # glDisable(GL_TEXTURE_2D)
 
-    glPopMatrix()
+    # glPopMatrix()
 
     # wood corner top
     glPushMatrix()
@@ -1122,6 +1122,33 @@ def draw_corner(x, y, z):
     # felt entryway
 
     # black bottom circle
+
+    dtheta = math.pi / 4
+    theta = math.pi
+
+    prev = (math.sin(theta), math.cos(theta)) # first/start point for panel
+
+    while theta < 5 * math.pi / 2:
+        theta += dtheta # go to second point in panel
+
+        vx = math.sin(theta)
+        vz = math.cos(theta)
+
+        curr = (vx, vz)
+
+        # draw the panel
+        size = math.sqrt((curr[0] - prev[0])**2 + (curr[1] - prev[1])**2)
+
+        glPushMatrix()
+        glTranslate(prev[0], -0.75, prev[1])
+        glRotatef(-90, 0, 1, 0)
+        glRotatef((3 * math.pi/8 + theta) * 180 / math.pi, 0, 1, 0)
+        draw_textured_plane(size, 1.5, 3, 3, felt_texture)
+        glPopMatrix()
+
+        prev = (vx, vz)
+
+    glDisable(GL_TEXTURE_2D)
 
     # black back arc liner
 
