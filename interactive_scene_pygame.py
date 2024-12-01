@@ -1342,8 +1342,28 @@ def draw_wall_picture(x, y, z):
 
 # TODO: implement
 def print_help_message():
-    print(camera)
-    pass
+    print("\nCamera Controls:")
+    print("  W/S - Move forward/backward")
+    print("  A/D - Strafe left/right")
+    print("  Q/E - Turn camera left/right")
+    print("  Z/X - Tilt camera up/down")
+    print("  Current Camera:", camera)
+    
+    print("\nLight Controls:")
+    print("  0 - Toggle flashlight")
+    print("  1 - Toggle red overhead light")
+    print("  2 - Toggle green overhead light")
+    print("  3 - Toggle blue overhead light")
+    print("  4 - Toggle hanging spotlight (yellow)")
+    print("  5 - Toggle desk lamp")
+    
+    print("\nInteraction Controls:")
+    print("  G - Roll the dice")
+    print("  T - Toggle hanging light swing")
+    
+    print("\nSystem Controls:")
+    print("  H - Show this help message")
+    print("  ESC - Exit program")
 
 #=======================================
 # Material Property Functions
