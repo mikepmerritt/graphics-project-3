@@ -866,10 +866,33 @@ def draw_dice(x, y, z):
 # TODO: implement
 def draw_pool_table(x, y, z):
     # corners (3 x 2 x 3) # floor should be at midpoint level, hole extends down
-    draw_corner(x - 8, y + 4.75, z - 3.5)
-    draw_corner(x + 8, y + 4.75, z - 3.5)
-    draw_corner(x - 8, y + 4.75, z + 3.5)
-    draw_corner(x + 8, y + 4.75, z + 3.5)
+
+    # top left
+    glPushMatrix()
+    glTranslatef(-8, 4.75, -3.5)
+    glRotatef(-90, 0, 1, 0)
+    draw_corner(x, y, z)
+    glPopMatrix()
+    
+    # top right
+    glPushMatrix()
+    glTranslatef(8, 4.75, -3.5)
+    glRotatef(180, 0, 1, 0)
+    draw_corner(x, y, z)
+    glPopMatrix()
+
+    # bottom left
+    glPushMatrix()
+    glTranslatef(-8, 4.75, 3.5)
+    draw_corner(x, y, z)
+    glPopMatrix()
+
+    # bottom right
+    glPushMatrix()
+    glTranslatef(8, 4.75, 3.5)
+    glRotatef(90, 0, 1, 0)
+    draw_corner(x, y, z)
+    glPopMatrix()
 
     # middles (3 x 2 x 3) # floor should be at midpoint level, hole extends down
 
@@ -1014,6 +1037,7 @@ def draw_corner(x, y, z):
     glTranslate(x, y, z) 
 
     # wood section
+    set_wood_support_material(GL_FRONT)
     glBindTexture(GL_TEXTURE_2D, table_support_texture)
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
@@ -1022,11 +1046,28 @@ def draw_corner(x, y, z):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
 
+    # wood corner walls
+
+    # back
+    glPushMatrix()
+    glTranslate(-1.5, -0.75, 1.5)
+    draw_textured_plane(3, 1.5, 6, 4, table_support_texture)
+    glPopMatrix()
+
+    # side
+    glPushMatrix()
+    glTranslate(-1.5, -0.75, -1.5)
+    glRotatef(-90, 0, 1, 0)
+    draw_textured_plane(3, 1.5, 6, 4, table_support_texture)
+    glPopMatrix()
+
     # wood corner top
     glPushMatrix()
 
     # Enable/Disable each time or OpenGL ALWAYS expects texturing!
     glEnable(GL_TEXTURE_2D)
+
+    glNormal3f(0, 1, 0)
     
     glBegin(GL_TRIANGLE_STRIP)
     glTexCoord2f(0, -1)
@@ -1052,6 +1093,8 @@ def draw_corner(x, y, z):
     glTexCoord2f(1, 0)
     glVertex3f(1, 0.75, 0) # right circle (11)
     glEnd()
+
+    glNormal3f(0, 1, 0)
 
     glBegin(GL_TRIANGLE_STRIP)
     dtheta = math.pi / 4
@@ -1097,7 +1140,7 @@ def draw_corner(x, y, z):
     glPopMatrix()
 
     # felt section
-    set_felt_material(GL_FRONT)
+    set_felt_material(GL_FRONT_AND_BACK) # TODO: fix normals and revert to front if possible
     glBindTexture(GL_TEXTURE_2D, felt_texture)
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
@@ -1114,7 +1157,7 @@ def draw_corner(x, y, z):
     # Enable/Disable each time or OpenGL ALWAYS expects texturing!
     glEnable(GL_TEXTURE_2D)
 
-    glNormal3f(0, 1, 0)
+    glNormal3f(0, -1, 0)
 
     glBegin(GL_TRIANGLE_FAN)
     glTexCoord2f(1.5, -1.5)
