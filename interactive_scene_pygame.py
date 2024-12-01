@@ -601,9 +601,9 @@ def draw_objects():
     draw_desk_lamp(-32, 8, -36)
     draw_dice(-37, 8.22, -34)
     draw_hanging_spotlight(0, 40, 0)
-    draw_pool_table(0, 5, 0)
+    draw_pool_table(0, 4, 0)
     # ball bounds are x: [-7.25, 7.25] z: [-2.75, 2.75]
-    draw_cue_ball(0, 10.25, 0) 
+    draw_cue_ball(0, 9.25, 0) 
     glPopMatrix()
     
 #=======================================
@@ -994,31 +994,32 @@ def draw_dice(x, y, z):
 def draw_pool_table(x, y, z):
     # corners (3 x 2 x 3) # floor should be at midpoint level, hole extends down
 
+    glPushMatrix()
+    glTranslatef(x, y, z)
+
     # top left
     glPushMatrix()
-    glTranslatef(-8, 4.75, -3.5)
     glRotatef(-90, 0, 1, 0)
-    draw_corner(x, y, z)
+    draw_corner(-3.5, 4.75, 8)
     glPopMatrix()
     
     # top right
     glPushMatrix()
-    glTranslatef(8, 4.75, -3.5)
     glRotatef(180, 0, 1, 0)
-    draw_corner(x, y, z)
+    draw_corner(-8, 4.75, 3.5)
     glPopMatrix()
 
     # bottom left
     glPushMatrix()
-    glTranslatef(-8, 4.75, 3.5)
-    draw_corner(x, y, z)
+    draw_corner(-8, 4.75, 3.5)
     glPopMatrix()
 
     # bottom right
     glPushMatrix()
-    glTranslatef(8, 4.75, 3.5)
     glRotatef(90, 0, 1, 0)
-    draw_corner(x, y, z)
+    draw_corner(-3.5, 4.75, 8)
+    glPopMatrix()
+
     glPopMatrix()
 
     # middles (3 x 2 x 3) # floor should be at midpoint level, hole extends down
@@ -1220,6 +1221,11 @@ def draw_corner(x, y, z):
     glTexCoord2f(1, 0)
     glVertex3f(1, 0.75, 0) # right circle (11)
     glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
 
     glNormal3f(0, 1, 0)
 
