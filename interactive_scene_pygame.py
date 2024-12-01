@@ -54,10 +54,23 @@ dice_texture_4 = None
 dice_texture_5 = None
 dice_texture_6 = None
 
-# scene-specific state information
+# Dice state information
 dice_animating = False
 dice_rotation = [0, 0, 0] 
 dice_rotation2 = [0, 0, 0]
+
+# Hanging light state information
+hanging_light_switched_on = False
+flickering = False
+flicker_duration = 0
+flicker_elapsed_frames = 0
+reflickering = False
+reflicker_duration = 0
+reflicker_elapsed_frames = 0
+
+light_swinging = False
+light_swing_speed = 0
+light_swing_angle = 0
 
 # These parameters define simple animation properties
 FPS = 60.0
@@ -75,10 +88,10 @@ lights = [
         diffuse=[1.0, 1.0, 1.0, 1.0],
         specular=[1.0, 1.0, 1.0, 1.0],
         direction=[0.0, 0.0, -1.0, 0.0],
-        display_ball=True,
+        display_ball=False,
         is_spot_light=True,
-        constant_attenuation=100,
-        linear_attenuation=0.1,
+        constant_attenuation=1,
+        linear_attenuation=0.01,
         quadratic_attenuation=0,
         spot_cutoff=30,
         spot_exponent=15
@@ -125,7 +138,6 @@ lights = [
         linear_attenuation=0.01,
         quadratic_attenuation=0
     ),
-
     # Hanging light in center of the room
     Light(
         GL_LIGHT4, 
@@ -137,7 +149,7 @@ lights = [
         direction=[0.0, -1.0, 0.0, 0.0],
         display_ball=True,
         is_spot_light=True,
-        spot_cutoff=90.0,
+        spot_cutoff=10.0,
         spot_exponent=10
     ),
     # Lamp in far right-corner of room
@@ -156,10 +168,18 @@ lights = [
     ),
 ]
 
+# Bounding box for room (xz-plane only)
+room_bounds = ((-40, -40), (40, 40))
+
+# Bounding boxes for obstacles (xz-plane only)
+obstacles = [
+    ((-39, -37), (-31, -31)),   # Side table boundaries
+    ((-9, -5), (9, 5)),         # Pool table boundaries
+]
+
 # Window data
 window_dimensions = (1000, 800)
 name = b'Project 2'
-animate = False
 
 #==============================
 # OpenGL and Scene Setup
@@ -172,6 +192,8 @@ def main():
     camera.eye = Point(0, 15, 40)  # Position the camera
     camera.look = Point(0, 0, 0)  # Look at the center of the scene
     camera.up = Vector(Point(0, 1, 0))  # Set up vector
+    camera.add_room_boundaries(room_bounds) # Add bounding box for room
+    camera.add_obstacle_bounding_boxes(obstacles) # Add bounding boxes for objects
 
     # Enters the main loop.   
     # Displays the window and starts listening for events.
@@ -274,7 +296,7 @@ def generate_checkerboard_texture(nrows, ncols, block_size, block_colors):
     return texture_name
 
 def main_loop():
-    global running, clock, animate
+    global running, clock
     while running:
         # poll for events
         # pygame.QUIT event means the user clicked X to close your window
@@ -284,9 +306,10 @@ def main_loop():
             elif event.type == pygame.KEYDOWN:
                 keyboard(event)
 
-        if animate:
-            # Advance to the next frame
-            advance()
+
+        # Always advance to the next frame
+        #   Necessary for calculating rolling dice positions or swinging light location
+        advance()
 
         # (Re)draw the scene (should only do this when necessary!)
         display()
@@ -319,9 +342,9 @@ def display():
 
 # Advance the scene one frame
 def advance():
-    # put any animation stuff in here
-     global dice_animating, dice_rotation, dice_rotation2, animate
-     if dice_animating:
+    # Dice animations
+    global dice_animating, dice_rotation, dice_rotation2
+    if dice_animating:
         dice_rotation[0] += 5  
         dice_rotation[1] += 8  
         dice_rotation[2] += 3  
@@ -329,22 +352,118 @@ def advance():
         dice_rotation2[0] += 8  
         dice_rotation2[1] += 5
         dice_rotation2[2] += 6
-        
+    
         if dice_rotation[0] >= 540: 
             dice_animating = False
-            animate = False
             dice_rotation = [random.randint(0,3) * 90, random.randint(0,3) * 90, random.randint(0,3) * 90]
             dice_rotation2 = [random.randint(0,3) * 90, random.randint(0,3) * 90, random.randint(0,3) * 90]
+
+    # Hanging light animations
+    global hanging_light_switched_on, flickering, flicker_duration, flicker_elapsed_frames, reflickering, reflicker_duration, reflicker_elapsed_frames
+
+    # FLICKERING PROCESS:
+    #   If the light has been activated by the player, it can flicker off randomly
+    #       When it flickers off, the light is immediately disabled and the duration of this flicker is set
+    #       The light will be in the flicker state until the full flicker duration has passed
+    #       When in the flicker state, it is possible for the light to turn on again, called a reflicker
+    #       This will cause the light to immediately be re-enabled and a new duration for reflicker is set
+    #       When in a reflicker state, the light is enabled, until the reflicker is over
+
+    # only start a flicker if the light is on
+    if hanging_light_switched_on:
+        # if not flickering, try to start one
+        if not flickering:
+            # check if a flicker should happen (has a 10% chance every frame)
+            should_flicker = random.random() < 0.1
+            # begin the flicker
+            if should_flicker:
+                flickering = True
+                flicker_duration = random.random() * 1.5 * FPS # flicker of up to 3 seconds
+                flicker_elapsed_frames = 0
+                lights[4].enabled = False
+        # if the light is flickering, count up the flicker time or reflicker time
+        else:
+            # check if flicker is ongoing or ended
+            if flicker_duration > flicker_elapsed_frames:
+                flicker_elapsed_frames += 1
+            else:
+                flickering = False
+                flicker_duration = 0
+                flicker_elapsed_frames = 0
+                
+                reflickering = False
+                reflicker_duration = 0
+                reflicker_elapsed_frames = 0
+
+                # restore original light properties
+                lights[4].enabled = True
+                lights[4].ambient = [0.5, 0.5, 0.0, 1.0]
+                lights[4].diffuse = [0.5, 0.5, 0.0, 1.0]
+                lights[4].specular = [0.5, 0.5, 0.0, 1.0]
+
+            # if not reflickering, try to start one
+            if not reflickering:
+                # check if a reflicker should happen (has a 30% chance every frame)
+                should_reflicker = random.random() < 0.3
+                # begin the reflicker
+                if should_reflicker:
+                    reflickering = True
+                    reflicker_duration = random.random() * 0.5 * FPS # reflicker of up to 1 seconds
+                    reflicker_elapsed_frames = 0
+                    # reflicker with lower light level
+                    lights[4].enabled = True
+                    lights[4].ambient = [0.1, 0.1, 0.0, 1.0]
+                    lights[4].diffuse = [0.1, 0.1, 0.0, 1.0]
+                    lights[4].specular = [0.1, 0.1, 0.0, 1.0]
+            else:
+                # check if reflicker is ongoing or ended
+                if reflicker_duration > reflicker_elapsed_frames:
+                    reflicker_elapsed_frames += 1
+                else:                 
+                    reflickering = False
+                    reflicker_duration = 0
+                    reflicker_elapsed_frames = 0
+                    # restore original light level
+                    lights[4].enabled = True
+                    lights[4].ambient = [0.5, 0.5, 0.0, 1.0]
+                    lights[4].diffuse = [0.5, 0.5, 0.0, 1.0]
+                    lights[4].specular = [0.5, 0.5, 0.0, 1.0]
+
+    # print(f'Flicker: \t{flickering}, Reflicker: \t{reflickering}')
+                    
+    global light_swinging, light_slowing, light_swing_speed, light_swing_angle
+    # if the light is actively swinging, keep adjusting the angle
+    if light_swinging:
+        light_swing_angle += light_swing_speed
+        if abs(light_swing_angle) >= 45:
+            light_swing_speed *= -1
+        # need to multiply by 5 to account for the radius of the lights arc
+        # otherwise the angle is drawn from straight down, so x is sine and y is cosine
+        light_x = 5 * math.sin(math.radians(light_swing_angle))
+        light_y = 5 * math.cos(math.radians(light_swing_angle))
+        lights[4].position.x = light_x
+        lights[4].position.y = 40 - light_y # need to account for coming from the ceiling
+        lights[4].direction[0] = math.sin(math.radians(light_swing_angle)) # normalized
+        lights[4].direction[1] = -math.cos(math.radians(light_swing_angle)) # normalized
+
+    # print(f'Swinging: \t{light_swinging}, Angle: {light_swing_angle}')
+    # print(f'Light Pos: {lights[4].position}, Light Direction: {lights[4].direction}')
+
+    # Flashlight updating
+
+    # calculate the direction using vector between camera location and look at point 
+    camera_direction = Vector(camera.eye, camera.get_look_at_point())
+
+    lights[0].position = copy.deepcopy(camera.eye)
+    lights[0].direction = [camera_direction.dx, camera_direction.dy, camera_direction.dz, 0.0]
 
 # Function used to handle any key events
 # event: The keyboard event that happened
 def keyboard(event):
-    global running, animate, dice_animating
+    global running, dice_animating, hanging_light_switched_on, light_swinging, light_swing_speed
     key = event.key # "ASCII" value of the key pressed
     if key == 27:  # ASCII code 27 = ESC-key
         running = False
-    elif key == ord(' '):
-        animate = not animate
     elif key == ord('w'):
         # Go forward
         camera.slide(0,0,-1)
@@ -386,14 +505,22 @@ def keyboard(event):
         lights[3].enabled = not lights[3].enabled
     elif key == ord('4'):
         # Toggle activation of light 4
-        lights[4].enabled = not lights[4].enabled
+        hanging_light_switched_on = not hanging_light_switched_on
+        lights[4].enabled = hanging_light_switched_on
+        # stop flickering if the light gets turned off
+        if not hanging_light_switched_on:
+            light_flickering = False
     elif key == ord('5'):
         # Toggle activation of light 5
         lights[5].enabled = not lights[5].enabled
-    elif key == ord('6'):
+    elif key == ord('g'):
+        # Play dice roll animation
         if not dice_animating:
             dice_animating = True
-            animate = True
+    elif key == ord('t'):
+        # Play hanging light swing
+        light_swinging = not light_swinging
+        light_swing_speed = 0.5
 
 # function to set up the camera, lights, and world
 def draw_scene():
@@ -1278,6 +1405,7 @@ def draw_hanging_spotlight(x, y, z):
     # may need additional parameters for swinging
     glPushMatrix()
     glTranslatef(x, y, z)
+    glRotatef(light_swing_angle, 0, 0, 1)
 
     pole_radius = 0.25
     pole_height = 5
@@ -1347,8 +1475,28 @@ def draw_wall_picture(x, y, z):
 
 # TODO: implement
 def print_help_message():
-    print(camera)
-    pass
+    print("\nCamera Controls:")
+    print("  W/S - Move forward/backward")
+    print("  A/D - Strafe left/right")
+    print("  Q/E - Turn camera left/right")
+    print("  Z/X - Tilt camera up/down")
+    print("  Current Camera:", camera)
+    
+    print("\nLight Controls:")
+    print("  0 - Toggle flashlight")
+    print("  1 - Toggle red overhead light")
+    print("  2 - Toggle green overhead light")
+    print("  3 - Toggle blue overhead light")
+    print("  4 - Toggle hanging spotlight (yellow)")
+    print("  5 - Toggle desk lamp")
+    
+    print("\nInteraction Controls:")
+    print("  G - Roll the dice")
+    print("  T - Toggle hanging light swing")
+    
+    print("\nSystem Controls:")
+    print("  H - Show this help message")
+    print("  ESC - Exit program")
 
 #=======================================
 # Material Property Functions

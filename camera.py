@@ -73,9 +73,31 @@ class Camera:
         u = n.cross(v)
         u.normalize()
         
-        self.eye.x += du * u.dx + dn * n.dx
-        self.eye.y += dv
-        self.eye.z += du * u.dz + dn * n.dz
+        new_x = self.eye.x + du * u.dx + dn * n.dx
+        new_y = self.eye.y + dv
+        new_z = self.eye.z + du * u.dz + dn * n.dz
+
+        # TODO: find a more efficient way to do bounds checking
+        # forcing the camera in the room boundaries
+        new_x = min(new_x, self.max_room_bound_x - 1)
+        new_x = max(new_x, self.min_room_bound_x + 1)
+        new_z = min(new_z, self.max_room_bound_z - 1)
+        new_z = max(new_z, self.min_room_bound_z + 1)
+
+        # TODO: find a more efficient way to do bounds checking
+        # force the camera off of the walls of objects
+        # TODO: fix issue causing camera to get stuck in objects
+        for ((min_obj_bound_x, min_obj_bound_z), (max_obj_bound_x, max_obj_bound_z)) in self.obstacle_bounding_boxes:
+            if new_x <= max_obj_bound_x + 1 and new_x >= min_obj_bound_x - 1 and new_z <= max_obj_bound_z + 1 and new_z >= min_obj_bound_z - 1:
+                move_direction_x = new_x - self.eye.x
+                move_direction_z = new_z - self.eye.y
+
+                # drawing the line between old position and new position
+                # TODO: see textbook and phone for calculations
+
+        self.eye.x = new_x
+        self.eye.y = new_y
+        self.eye.z = new_z
     
     def turn(self, angle):
         """ Turn the camera by the given angle"""
@@ -89,9 +111,25 @@ class Camera:
         
         # TODO: if updating up axis, can support 90 degree angles
         # clamping the angle between -90 and 90
-        # TODO: determine if this is the correct way to do this
         resultant_angle = min(89, resultant_angle)
         resultant_angle = max(-89, resultant_angle)
 
         self.pitchAngle = resultant_angle
+
+    def get_look_at_point(self):
+        # Compute the look at point based on the turn angle
+        rad = math.radians(self.lookAngle)
+        pitch_rad = math.radians(self.pitchAngle)
+        lookX = self.eye.x - math.sin(rad) * math.cos(pitch_rad)
+        lookY = self.eye.y - math.sin(pitch_rad)
+        lookZ = self.eye.z - math.cos(rad) * math.cos(pitch_rad)
+
+        return Point(lookX, lookY, lookZ)
         
+    def add_obstacle_bounding_boxes(self, boxes):
+        """ Load all object bounding boxes for collision detection. """
+        self.obstacle_bounding_boxes = boxes
+
+    def add_room_boundaries(self, bounds):
+        """ Load room bounding bounds for collision detection. """
+        ((self.min_room_bound_x, self.min_room_bound_z), (self.max_room_bound_x, self.max_room_bound_z)) = bounds
