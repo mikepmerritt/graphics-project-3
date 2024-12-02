@@ -32,10 +32,10 @@ class BilliardBall:
         # movement info
         self.force_magnitude = 0
         self.force_direction = Vector(Point(0, 0, 0))
-        # if id == 0:
-        #     self.force_magnitude = 4
-        #     self.force_direction = Vector(Point(3, 0, -1))
-        #     self.force_direction.normalize()
+        if id == 0:
+            self.force_magnitude = 4
+            self.force_direction = Vector(Point(3, 0, -1))
+            self.force_direction.normalize()
 
         # "try" positions - where the ball wants to go, used in advance
         self.tx = x
@@ -74,11 +74,69 @@ class BilliardBall:
 
     def compare(self, other, tolerance=0.25):
         # bounds check with other ball (tolerance = radius)
-        if math.abs(self.tx - other.tx) <= tolerance and math.abs(self.tz - other.tz) <= tolerance:
-            # redirect both and recalc t
-            return True
-        else:
-            return False
+        if abs(self.tx - other.tx) <= tolerance and abs(self.tz - other.tz) <= tolerance:
+            # redirect both
+            # part 1: move up until the collision
+            # calculate the collision centers
+            # TODO: probably need to calculate rather than estimate with t
+            # x1
+            center = Point(self.tx, 0, self.tz)
+            # x2
+            other_center = Point(other.tx, 0, other.tz)
+
+            # part 2: determine new velocities post-collision
+            # vectors marked with <v> in comments
+
+            # <x1 - x2>; p = x1, q = x2, q - p
+            center_diff_vector = Vector(other_center, center)       
+            # <x2 - x1>; p = x2, q = x1, q - p                                    
+            other_center_diff_vector = Vector(other_center, center)
+
+            # <v1>
+            old_velocity = self.force_direction.scalar_mult(self.force_magnitude)
+            # <v2>
+            other_old_velocity = other.force_direction.scalar_mult(other.force_magnitude)
+
+            # <v1 - v2>
+            velocity_diff = Vector()
+            velocity_diff.dx = old_velocity.dx - other_old_velocity.dx
+            velocity_diff.dy =  old_velocity.dy - other_old_velocity.dy
+            velocity_diff.dz = old_velocity.dz - other_old_velocity.dz
+            # <v2 - v1>
+            other_velocity_diff = Vector()
+            other_velocity_diff.dx = other_old_velocity.dx - old_velocity.dx
+            other_velocity_diff.dy =  other_old_velocity.dy - old_velocity.dy
+            other_velocity_diff.dz = other_old_velocity.dz - old_velocity.dz
+
+            # dot(<v1 - v2>, <x1 - x2>) / ||<x1 - x2>||^2
+            scalar = velocity_diff.dot(center_diff_vector) / center_diff_vector.magnitude() ** 2
+            # dot(<v2 - v1>, <x2 - x1>) / ||<x2 - x1>||^2
+            other_scalar = velocity_diff.dot(center_diff_vector) / other_center_diff_vector.magnitude() ** 2
+
+            # apply scalars from above
+            scaled_part = center_diff_vector.scalar_mult(scalar)
+            other_scaled_part = other_center_diff_vector.scalar_mult(other_scalar)
+
+            # entire formula
+            new_velocity = Vector()
+            new_velocity.dx = old_velocity.dx - scaled_part.dx
+            new_velocity.dy = old_velocity.dy - scaled_part.dy
+            new_velocity.dz = old_velocity.dz - scaled_part.dz
+            other_new_velocity = Vector()
+            other_new_velocity.dx = other_old_velocity.dx - other_scaled_part.dx
+            other_new_velocity.dy = other_old_velocity.dy - other_scaled_part.dy
+            other_new_velocity.dz = other_old_velocity.dz - other_scaled_part.dz
+
+            self.force_magnitude = new_velocity.magnitude()
+            new_velocity.normalize()
+            self.force_direction = new_velocity
+
+            other.force_magnitude = other_new_velocity.magnitude()
+            other_new_velocity.normalize()
+            other.force_direction = other_new_velocity
+
+            # part 3: move the rest
+            # TODO: necessary?
 
 #=======================================
 # Initial data configuration + Global module variables
@@ -454,12 +512,19 @@ def advance():
             dice_rotation2 = [random.randint(0,3) * 90, random.randint(0,3) * 90, random.randint(0,3) * 90]
 
     # Billiards behaviors
-    for ball in all_balls:
-        if not ball.sunk:
-            ball.predict()
-        
-        # TODO: interball collisions
+    # try to move on its own
+    for ball_index in range(len(all_balls)):
+        if not all_balls[ball_index].sunk:
+            all_balls[ball_index].predict()
 
+    # check for interball collisions
+    for ball_index in range(len(all_balls)):
+        if not all_balls[ball_index].sunk:
+            for other_ball_index in range(ball_index + 1, len(all_balls)):
+                if not all_balls[other_ball_index].sunk:
+                    all_balls[ball_index].compare(all_balls[other_ball_index])
+
+    # actually move
     # precondition: all non-sunk balls predicted successfully
     for ball in all_balls:
         if not ball.sunk:

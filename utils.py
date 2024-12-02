@@ -56,6 +56,16 @@ class Vector:
         """Basic string representation of this point"""
         return "<%s,%s,%s>"%(self.dx,self.dy,self.dz)
 
+    def scalar_mult(self, scalar):
+        res = Vector()
+        res.dx = self.dx * scalar
+        res.dy = self.dy * scalar
+        res.dz = self.dz * scalar
+        return res
+
+    def dot(self, other):
+        return self.dx*other.dx + self.dy*other.dy + self.dz*other.dz
+
     def cross(self, other):
         res = Vector()
         res.dx = self.dy*other.dz - self.dz*other.dy
