@@ -215,8 +215,8 @@ CAM_NEAR = 0.01
 CAM_FAR = 1000.0
 CAM_ANGLE = 60.0
 
-# camera position at start
-start_camera_position = Point(0, 15, 40)
+# camera configuration at start
+start_camera_position = Point(0, 15, 35)
 
 # quadrics used for curved shapes
 tube = None
@@ -273,13 +273,19 @@ reflickering = False
 reflicker_duration = 0
 reflicker_elapsed_frames = 0
 
+# Animation parameters for the hanging lamp
+light_pole_length = 5
 light_swinging = False
-light_swing_speed = 0
-light_swing_angle = 0
+light_should_swing = False
+light_angle = 0 # if starting swinging, change to math.radians(45)
+light_angle_velocity = 0
+light_angle_acceleration = 0
+gravity = 1
+angle_velocity_start = 0.0830
 
 # These parameters define simple animation properties
-FPS = 60.0
-DELAY = int(1000.0 / FPS + 0.5)
+FPS = 60.0  # frames per second
+DELAY = int(1000.0 / FPS + 0.5) # frame time (ms per frame)
 
 # all lights in the scene
 # order is flashlight (100% white), overhead red, overhead green, overhead blue, hanging light (50% yellow) + flicker, desk lamp (75% white)
@@ -304,7 +310,7 @@ lights = [
     # Red light in far-left quarter of room
     Light(
         GL_LIGHT1, 
-        enabled=False,
+        enabled=True,
         position=Point(20, 40, -20),
         ambient=[0.3, 0.0, 0.0, 1.0],  
         diffuse=[0.3, 0.0, 0.0, 1.0],
@@ -318,7 +324,7 @@ lights = [
     # Green light in left-center area of room
     Light(
         GL_LIGHT2, 
-        enabled=False,
+        enabled=True,
         position=Point(-20, 40, 0),
         ambient=[0.0, 0.3, 0.0, 1.0],  
         diffuse=[0.0, 0.3, 0.0, 1.0],
@@ -332,7 +338,7 @@ lights = [
     # Blue light in close-right quarter of room
     Light(
         GL_LIGHT3, 
-        enabled=False,
+        enabled=True,
         position=Point(20, 40, 20),
         ambient=[0.0, 0.0, 0.3, 1.0],  
         diffuse=[0.0, 0.0, 0.3, 1.0],
@@ -380,6 +386,7 @@ room_bounds = ((-40, -40), (40, 40))
 obstacles = [
     ((-39, -37), (-31, -31)),   # Side table boundaries
     ((-9, -5), (9, 5)),         # Pool table boundaries
+    ((-7.5, -40), (7.5, -39)),  # Wall painting boundaries
 ]
 
 # Window data
@@ -394,10 +401,10 @@ def main():
     init()
     global camera
     camera = Camera(CAM_ANGLE, window_dimensions[0]/window_dimensions[1], CAM_NEAR, CAM_FAR)
-    camera.eye = Point(0, 15, 40)  # Position the camera
-    camera.look = Point(0, 0, 0)  # Look at the center of the scene
-    camera.up = Vector(Point(0, 1, 0))  # Set up vector
-    camera.add_room_boundaries(room_bounds) # Add bounding box for room
+    camera.eye = copy.deepcopy(start_camera_position)  # Position the camera
+    # camera.look = Point(0, 0, 0)  # Look at the center of the scene
+    # camera.up = Vector(Point(0, 1, 0))  # Set up vector
+    camera.add_room_bounds(room_bounds) # Add bounding box for room
     camera.add_obstacle_bounding_boxes(obstacles) # Add bounding boxes for objects
 
     # Enters the main loop.   
@@ -664,23 +671,43 @@ def advance():
                     lights[4].specular = [0.5, 0.5, 0.0, 1.0]
 
     # print(f'Flicker: \t{flickering}, Reflicker: \t{reflickering}')
-                    
-    global light_swinging, light_slowing, light_swing_speed, light_swing_angle
-    # if the light is actively swinging, keep adjusting the angle
+
+    global light_swinging, light_angle, light_angle_velocity, light_angle_acceleration
+
+    # set the flag for if the light is moving to be 
+    light_swinging = abs(light_angle) > 0.01 or abs(light_angle_velocity) > 0.01
+
+    # BEGIN REF
+    #   for the physics behind the pendulum motion, I consulted this video: https://www.youtube.com/watch?v=NBWMtlbbOag
     if light_swinging:
-        light_swing_angle += light_swing_speed
-        if abs(light_swing_angle) >= 45:
-            light_swing_speed *= -1
+        force = gravity * math.sin(light_angle) / DELAY
+        light_angle_acceleration = (-1 * force) / light_pole_length
+        light_angle_velocity += light_angle_acceleration
+        light_angle += light_angle_velocity
+
+        # apply damping force if should stop
+        if not light_should_swing:
+            light_angle_velocity *= 0.9
+        # END REF
+
+        # since our pendulum starts at rest, I needed to know what velocity it needs to start with
+        #   at the bottom to start the motion. If angle velocity is left as 0, it will not move, 
+        #   as force is always 0.
+        #   This value is set as `angle_velocity_start` so it can be set when the swinging starts.
+        # if abs(light_angle) < 0.01:
+        #     print(light_angle_velocity) # gives roughly 0.0830
+
+        # spot light changes
         # need to multiply by 5 to account for the radius of the lights arc
         # otherwise the angle is drawn from straight down, so x is sine and y is cosine
-        light_x = 5 * math.sin(math.radians(light_swing_angle))
-        light_y = 5 * math.cos(math.radians(light_swing_angle))
+        light_x = light_pole_length * math.sin(light_angle)
+        light_y = light_pole_length * math.cos(light_angle)
         lights[4].position.x = light_x
         lights[4].position.y = 40 - light_y # need to account for coming from the ceiling
-        lights[4].direction[0] = math.sin(math.radians(light_swing_angle)) # normalized
-        lights[4].direction[1] = -math.cos(math.radians(light_swing_angle)) # normalized
+        lights[4].direction[0] = math.sin(light_angle) # normalized
+        lights[4].direction[1] = -math.cos(light_angle) # normalized
 
-    # print(f'Swinging: \t{light_swinging}, Angle: {light_swing_angle}')
+    # print(f'Swinging: {light_swinging}, Should swing: {light_should_swing}, Angle: {light_angle}')
     # print(f'Light Pos: {lights[4].position}, Light Direction: {lights[4].direction}')
 
     # Flashlight updating
@@ -694,10 +721,19 @@ def advance():
 # Function used to handle any key events
 # event: The keyboard event that happened
 def keyboard(event):
-    global running, dice_animating, hanging_light_switched_on, light_swinging, light_swing_speed
+    global running, dice_animating, hanging_light_switched_on, light_swinging, light_should_swing, light_angle_velocity
     key = event.key # "ASCII" value of the key pressed
     if key == 27:  # ASCII code 27 = ESC-key
         running = False
+    elif key == ord('r'):
+        # Reset the camera position
+        camera.eye = copy.deepcopy(start_camera_position)
+        camera.placeCamera()
+    elif key == ord('t'):
+        # Reset the camera angles
+        camera.lookAngle = 0
+        camera.pitchAngle = 0
+        camera.placeCamera()
     elif key == ord('w'):
         # Go forward
         camera.slide(0,0,-1)
@@ -751,10 +787,17 @@ def keyboard(event):
         # Play dice roll animation
         if not dice_animating:
             dice_animating = True
-    elif key == ord('t'):
-        # Play hanging light swing
-        light_swinging = not light_swinging
-        light_swing_speed = 0.5
+    elif key == ord('f'):
+        # Start the light swinging if not already moving and not supposed to be moving
+        if not light_swinging and not light_should_swing:
+            light_should_swing = True
+            light_angle_velocity = angle_velocity_start
+        # Do not start the light swinging if it is slowing down currently
+        elif light_swinging and not light_should_swing:
+            print("Warning: In order to ensure proper pendulum motion, you can only start the swing when the light is at rest. Try again later.")
+        # Start the light slowing down if moving
+        elif light_swinging and light_should_swing:
+            light_should_swing = False
 
 # function to set up the camera, lights, and world
 def draw_scene():
@@ -837,7 +880,7 @@ def draw_objects():
     draw_hanging_spotlight(0, 40, 0)
     draw_pool_table(table_x, 4, table_z)
     draw_balls()
-    draw_wall_picture(0, 20, -39.5, 15, 15)
+    draw_wall_painting(0, 20, -39.5, 15, 15)
     glPopMatrix()
     
 #=======================================
@@ -1924,10 +1967,10 @@ def draw_hanging_spotlight(x, y, z):
     # may need additional parameters for swinging
     glPushMatrix()
     glTranslatef(x, y, z)
-    glRotatef(light_swing_angle, 0, 0, 1)
+    glRotatef(math.degrees(light_angle), 0, 0, 1)
 
     pole_radius = 0.25
-    pole_height = 5
+    pole_height = light_pole_length
 
     upper_lamp_radius = 2
     lower_lamp_radius = 5
@@ -1990,7 +2033,7 @@ def draw_hanging_spotlight(x, y, z):
 
 # TODO: implement disabling
 # draws a painting on the xy-plane based on the lighting
-def draw_wall_picture(x, y, z, width, height):
+def draw_wall_painting(x, y, z, width, height):
     # move to corner to draw the painting canvas
     glPushMatrix()
     glTranslatef(x - (width / 2), (y - height / 2), z)
@@ -2093,7 +2136,9 @@ def print_help_message():
     print("  A/D - Strafe left/right")
     print("  Q/E - Turn camera left/right")
     print("  Z/X - Tilt camera up/down")
-    print("  Current Camera:", camera)
+    print("  R   - Reset camera to home position")
+    print("  T   - Reset camera to original angle")
+    # print("  Current Camera:", camera)
     
     print("\nLight Controls:")
     print("  0 - Toggle flashlight")
@@ -2105,7 +2150,7 @@ def print_help_message():
     
     print("\nInteraction Controls:")
     print("  G - Roll the dice")
-    print("  T - Toggle hanging light swing")
+    print("  F - Toggle hanging light swing")
     
     print("\nSystem Controls:")
     print("  H - Show this help message")
