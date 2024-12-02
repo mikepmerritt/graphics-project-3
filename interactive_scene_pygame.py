@@ -272,6 +272,7 @@ three_ball_texture = None
 eight_ball_texture = None
 ten_ball_texture = None
 fourteen_ball_texture = None
+nine_ball_texture = None
 library_painting_texture = None
 
 # Dice state information
@@ -452,7 +453,7 @@ def init():
     # quadrics
     global tube, ball, disk
     # textures
-    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, ceiling_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, pool_wood_texture, felt_texture, pocket_texture, cue_ball_texture, one_ball_texture, three_ball_texture, eight_ball_texture, ten_ball_texture, fourteen_ball_texture, library_painting_texture
+    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, ceiling_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, pool_wood_texture, felt_texture, pocket_texture, cue_ball_texture, one_ball_texture, three_ball_texture, eight_ball_texture, ten_ball_texture, fourteen_ball_texture, nine_ball_texture, library_painting_texture
 
     # pygame setup
     pygame.init()
@@ -485,6 +486,7 @@ def init():
     eight_ball_texture = load_texture("resources/ball8_squish.jpg", 1024)
     ten_ball_texture = load_texture("resources/ball10_squish.jpg", 1024)
     fourteen_ball_texture = load_texture("resources/ball14_squish.jpg", 1024)
+    nine_ball_texture = load_texture("resources/ball9_squish.jpg", 1024)
     library_painting_texture = load_texture("resources/library_painting.jpg", 2048)
     floor_texture = generate_checkerboard_texture(4, 4, 1, [[139, 69, 19, 255], [205, 133, 63, 255]]) 
 
@@ -1876,8 +1878,10 @@ def draw_billiard_ball(x, y, z, id, direction, x_distance, z_distance):
         texture = eight_ball_texture
     elif id == 10:
         texture = ten_ball_texture
-    else:
+    elif id == 14:
         texture = fourteen_ball_texture
+    else:
+        texture = nine_ball_texture
 
     set_ball_material(GL_FRONT_AND_BACK)
     glBindTexture(GL_TEXTURE_2D, texture)
@@ -1953,6 +1957,7 @@ def reset_balls():
     all_balls.append(BilliardBall(3, table_x + 2.4, table_z + -0.2))    # three
     all_balls.append(BilliardBall(10, table_x + 2.8, table_z + 0.4))    # ten
     all_balls.append(BilliardBall(14, table_x + 2.8, table_z + -0.4))   # fourteen
+    all_balls.append(BilliardBall(9, table_x + 2.8, table_z))          # nine
 
 def draw_balls():
     for ball in all_balls:
