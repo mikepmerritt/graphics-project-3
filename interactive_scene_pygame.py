@@ -29,6 +29,8 @@ class BilliardBall:
         self.z = z
         self.sunk = False
 
+        ball_initial_positions[id] = Point(x, 9.25, z)
+
         # movement info
         self.force_magnitude = 0
         self.force_direction = Vector(Point(0, 0, 0))
@@ -218,6 +220,7 @@ CAM_ANGLE = 60.0
 
 # camera configuration at start
 start_camera_position = Point(0, 15, 35)
+up_vector = Vector(Point(0, 1, 0))
 
 # quadrics used for curved shapes
 tube = None
@@ -290,6 +293,8 @@ angle_velocity_start = 0.0830
 ball_game_active = False
 cue_ball_angle = 0
 cue_ball_power = 2
+
+ball_initial_positions = {}
 
 # These parameters define simple animation properties
 FPS = 60.0  # frames per second
@@ -1845,7 +1850,7 @@ def draw_middle_hole(x, y, z):
 
     glPopMatrix()
 
-def draw_billiard_ball(x, y, z, id, x_rotation=-90, z_rotation=0):
+def draw_billiard_ball(x, y, z, id):
     glPushMatrix()
 
     texture = cue_ball_texture # temp, should not run
@@ -1873,8 +1878,20 @@ def draw_billiard_ball(x, y, z, id, x_rotation=-90, z_rotation=0):
     glEnable(GL_TEXTURE_2D)
 
     glTranslatef(x, y, z)
-    glRotate(x_rotation, 1, 0, 0)
-    glRotate(z_rotation, 0, 0, 1)
+    # initial rotation
+    glRotatef(-90, 1, 0, 0)
+
+    # TODO: determine correct way to save series of rotations
+    # to give the illusion of rolling, rotation is based on distance from start
+    #   based on arc length traveled
+    initial_pos = ball_initial_positions[id]
+    x_dist = x - initial_pos.x
+    z_dist = z - initial_pos.z
+    x_rotation = x_dist / 0.25
+    z_rotation = x_dist / 0.25
+
+    glRotatef(math.degrees(z_rotation), 1, 0, 0)
+    glRotatef(math.degrees(x_rotation), 0, 0, 1)
     gluSphere(ball, 0.25, 16, 16)
 
     glDisable(GL_TEXTURE_2D)
