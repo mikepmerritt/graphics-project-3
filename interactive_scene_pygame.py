@@ -1645,6 +1645,7 @@ def draw_hanging_spotlight(x, y, z):
 # TODO: implement disabling
 # draws a painting on the xy-plane based on the lighting
 def draw_wall_picture(x, y, z, width, height):
+    # move to corner to draw the painting canvas
     glPushMatrix()
     glTranslatef(x - (width / 2), (y - height / 2), z)
     set_painting_material(GL_FRONT)
@@ -1665,14 +1666,78 @@ def draw_wall_picture(x, y, z, width, height):
 
     glPopMatrix()
 
+    # move to center to draw the frame
+    glPushMatrix()
+    glTranslatef(x, y, z)
+    set_wood_support_material(GL_FRONT)
+
+    frame_size = 1
+
+    # left side
+    draw_trapezoidal_prism(- width / 2 - frame_size / 2, 0, 0, frame_size, height + 2 * frame_size, frame_size, 3, 10, 3, table_support_texture)
+    # bottom side
+    glRotatef(90, 0, 0, 1)
+    draw_trapezoidal_prism(- height / 2 - frame_size / 2, 0, 0, frame_size, width + 2 * frame_size, frame_size, 3, 10, 3, table_support_texture)
+    # right side
+    glRotatef(90, 0, 0, 1)
+    draw_trapezoidal_prism(- width / 2 - frame_size / 2, 0, 0, frame_size, height + 2 * frame_size, frame_size, 3, 10, 3, table_support_texture)
+    # top side
+    glRotatef(90, 0, 0, 1)
+    draw_trapezoidal_prism(- height / 2 - frame_size / 2, 0, 0, frame_size, width + 2 * frame_size, frame_size, 3, 10, 3, table_support_texture)
+
+    glPopMatrix()
+
 # draws a trapezoidal prism, used for the painting frame
 # the trapezoid shape is essentially a rectangular prism with a 30 degree
 #   angle up on the inside portion
-def draw_trapezoidal_prism(x, y, z, x_size, y_size, z_size, x_slices, y_slices, z_slices):
+def draw_trapezoidal_prism(x, y, z, x_size, y_size, z_size, x_slices, y_slices, z_slices, texture_name, stretch=True):
     # move to cube location
     glPushMatrix()
     glTranslate(x, y, z)
 
+    # Draw side 1 (+z)
+    glPushMatrix()
+    glTranslate(-x_size/2, -y_size/2, z_size/2)
+    draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name, stretch)
+    glPopMatrix()
+
+    # Draw side 2 (-z)
+    glPushMatrix()
+    glTranslate(x_size/2, -y_size/2, -z_size/2)
+    glRotated(180, 0, 1, 0)
+    draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name, stretch)
+    glPopMatrix()
+
+    # Draw side 3 (-x)
+    glPushMatrix()
+    glTranslate(-x_size/2, -y_size/2, -z_size/2)
+    glRotatef(-90, 0, 1, 0)
+    draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name, stretch)
+    glPopMatrix()
+
+    # Draw side 4 (+x)
+    glPushMatrix()
+    glTranslatef(x_size/2, -y_size/2, z_size/2)
+    glRotatef(90, 0, 1, 0)
+    draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name, stretch)
+    glPopMatrix()
+
+    # TODO: fix to be trapezoid shaped
+    # # Draw side 5 (-y)
+    # glPushMatrix()
+    # glTranslatef(-x_size/2, -y_size/2, -z_size/2)
+    # glRotatef(90, 1, 0, 0)
+    # draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name, stretch)
+    # glPopMatrix()
+
+    # # Draw side 6 (+y)
+    # glPushMatrix()
+    # glTranslatef(-x_size/2, y_size/2, z_size/2)
+    # glRotatef(-90, 1, 0, 0)
+    # draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name, stretch)
+    # glPopMatrix()
+
+    # return
     glPopMatrix()
 
 # TODO: implement
@@ -1745,7 +1810,10 @@ def set_felt_material(face):
 
 # helper method to set the material properties for the table supports
 def set_wood_support_material(face):
-    pass # TODO: find and implement
+    glMaterialfv(face, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(face, GL_SHININESS, 10.0)
 
 # helper method to set the material properties for the painting on the wall
 # TODO: update to be different from felt
