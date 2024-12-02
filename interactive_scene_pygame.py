@@ -1026,8 +1026,11 @@ def draw_pool_table(x, y, z):
 
     # middles (3 x 2 x 3) # floor should be at midpoint level, hole extends down
 
-    draw_middle_hole(0, 4.75, -3.5)
+    glPushMatrix()
     draw_middle_hole(0, 4.75, 3.5)
+    glRotatef(180, 0, 1, 0)
+    draw_middle_hole(0, 4.75, 3.5)
+    glPopMatrix()
 
     glPopMatrix()
 
@@ -1139,60 +1142,42 @@ def draw_rect(x, y, z, x_size, y_size, z_size, x_slices, y_slices, z_slices, tex
     # Draw side 1 (+z)
     glPushMatrix()
     glTranslate(-x_size/2, -y_size/2, z_size/2)
-    if stretch:
-        draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name)
-    else:
-        draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name, False)
+    draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name, stretch)
     glPopMatrix()
 
     # Draw side 2 (-z)
     glPushMatrix()
     glTranslate(x_size/2, -y_size/2, -z_size/2)
     glRotated(180, 0, 1, 0)
-    if stretch:
-        draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name)
-    else:
-        draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name, False)
+    draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name, stretch)
     glPopMatrix()
 
     # Draw side 3 (-x)
     glPushMatrix()
     glTranslate(-x_size/2, -y_size/2, -z_size/2)
     glRotatef(-90, 0, 1, 0)
-    if stretch:
-        draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name)
-    else:
-        draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name, False)
+    draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name, stretch)
     glPopMatrix()
 
     # Draw side 4 (+x)
     glPushMatrix()
     glTranslatef(x_size/2, -y_size/2, z_size/2)
     glRotatef(90, 0, 1, 0)
-    if stretch:
-        draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name)
-    else:
-        draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name, False)
+    draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name, stretch)
     glPopMatrix()
 
     # Draw side 5 (-y)
     glPushMatrix()
     glTranslatef(-x_size/2, -y_size/2, -z_size/2)
     glRotatef(90, 1, 0, 0)
-    if stretch:
-        draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name)
-    else:
-        draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name, False)
+    draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name, stretch)
     glPopMatrix()
 
     # Draw side 6 (+y)
     glPushMatrix()
     glTranslatef(-x_size/2, y_size/2, z_size/2)
     glRotatef(-90, 1, 0, 0)
-    if stretch:
-        draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name)
-    else:
-        draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name, False)
+    draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name, stretch)
     glPopMatrix()
 
     # return
@@ -1470,7 +1455,7 @@ def draw_middle_hole(x, y, z):
     # Enable/Disable each time or OpenGL ALWAYS expects texturing!
     glEnable(GL_TEXTURE_2D)
     
-    glNormal3f(-0.5, 0, -0.75)
+    glNormal3f(0.75, 0, -0.5)
 
     glBegin(GL_TRIANGLE_FAN)
 
@@ -1496,23 +1481,23 @@ def draw_middle_hole(x, y, z):
 
     glPushMatrix()
 
+    glNormal3f(0, 1, 0)
+
     # Enable/Disable each time or OpenGL ALWAYS expects texturing!
     glEnable(GL_TEXTURE_2D)
     
-    glNormal3f(-0.5, 0, -0.75)
+    glBegin(GL_TRIANGLE_FAN)
 
-    # glBegin(GL_TRIANGLE_FAN)
+    glTexCoord2f(1, 0.25)
+    glVertex3f(-1, 0.75, 0.25)
 
-    # # glTexCoord2f(0, 0)
-    # # glVertex3f(-1, 0, 0.25)
+    glTexCoord2f(1.5, 0.25)
+    glVertex3f(-1.5, 0.75, 0.25)
 
-    # # glTexCoord2f(0, 1)
-    # # glVertex3f(-1, 0.75, 0.25)
+    glTexCoord2f(1.5, -0.5)
+    glVertex3f(-1.5, 0.75, -0.5)
 
-    # # glTexCoord2f(1, 1)
-    # # glVertex3f(-1.5, 0.75, -0.5)
-
-    # glEnd()
+    glEnd()
 
     glDisable(GL_TEXTURE_2D)
 
@@ -1546,6 +1531,34 @@ def draw_middle_hole(x, y, z):
     glDisable(GL_TEXTURE_2D)
 
     glPopMatrix()
+
+    # top right
+
+    glPushMatrix()
+
+    glNormal3f(0, 1, 0)
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+    
+    glBegin(GL_TRIANGLE_FAN)
+
+    glTexCoord2f(-1, 0.25)
+    glVertex3f(1, 0.75, 0.25)
+
+    glTexCoord2f(-1.5, 0.25)
+    glVertex3f(1.5, 0.75, 0.25)
+
+    glTexCoord2f(-1.5, -0.5)
+    glVertex3f(1.5, 0.75, -0.5)
+
+    glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
+
+
 
     glPopMatrix()
 
