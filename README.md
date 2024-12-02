@@ -59,8 +59,40 @@ Disable all the lights except the flashlight to have the painting in the back re
 
 Pressing space activates the cue ball aiming system, drawing a line from the cue ball in the target direction. The player can rotate the angle using left and right arrows, and can increase or decrease power with the up and down arrows. The player can hit the cue ball by pressing space again, and the balls will all roll according to their direction traveled.
 
+### Controls
+
+Camera Controls:
+  W/S - Move forward/backward
+  A/D - Strafe left/right
+  Q/E - Turn camera left/right
+  Z/X - Tilt camera up/down
+  R   - Reset camera to home position
+  T   - Reset camera to original angle
+
+Light Controls:
+  0 - Toggle flashlight
+  1 - Toggle red overhead light
+  2 - Toggle green overhead light
+  3 - Toggle blue overhead light
+  4 - Toggle hanging spotlight (yellow)
+  5 - Toggle desk lamp
+
+Interaction Controls:
+  G - Roll the dice
+  F - Toggle hanging light swing
+
+Pool Controls:
+  Space      - Toggle aiming / fire when aiming
+  Left/Right - Adjust angle
+  Up/Down    - Increase/decrease power
+  P          - Reset the pool minigame
+
+System Controls:
+  H - Show this help message
+  ESC - Exit program
+
 ## Bonus Features
 
 You can currently win the pool minigame by sinking all the balls. If the cue ball goes in a pocket, the game resets. If all balls (except the cue ball) go in the pocket, a message is printed saying you have won.
 
-The pool table is also made very detailed, having rounded pockets and angled entrances to the pockets using custom geometry.
+The pool table is also very detailed, having rounded pockets and angled entrances to the pockets using custom geometry.
