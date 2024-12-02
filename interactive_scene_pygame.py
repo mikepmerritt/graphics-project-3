@@ -1958,12 +1958,12 @@ def draw_cue_ball(x, y, z):
 def reset_balls():
     global all_balls
     all_balls = []
-    all_balls.append(BilliardBall(0, -2, 0))        # cue
-    all_balls.append(BilliardBall(8, 2, 0))         # eight
-    all_balls.append(BilliardBall(1, 2.4, 0.2))     # one
-    all_balls.append(BilliardBall(3, 2.4, -0.2))    # three
-    all_balls.append(BilliardBall(10, 2.8, 0.4))    # ten
-    all_balls.append(BilliardBall(14, 2.8, -0.4))   # fourteen
+    all_balls.append(BilliardBall(0, table_x + -2, table_z + 0))        # cue
+    all_balls.append(BilliardBall(8, table_x + 2, table_z + 0))         # eight
+    all_balls.append(BilliardBall(1, table_x + 2.4, table_z + 0.2))     # one
+    all_balls.append(BilliardBall(3, table_x + 2.4, table_z + -0.2))    # three
+    all_balls.append(BilliardBall(10, table_x + 2.8, table_z + 0.4))    # ten
+    all_balls.append(BilliardBall(14, table_x + 2.8, table_z + -0.4))   # fourteen
 
 def draw_balls():
     for ball in all_balls:
