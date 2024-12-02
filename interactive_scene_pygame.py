@@ -469,8 +469,11 @@ def keyboard(event):
     if key == 27:  # ASCII code 27 = ESC-key
         running = False
     elif key == ord('r'):
-        # Reset the camera
+        # Reset the camera position
         camera.eye = copy.deepcopy(start_camera_position)
+        camera.placeCamera()
+    elif key == ord('t'):
+        # Reset the camera angles
         camera.lookAngle = 0
         camera.pitchAngle = 0
         camera.placeCamera()
@@ -527,7 +530,7 @@ def keyboard(event):
         # Play dice roll animation
         if not dice_animating:
             dice_animating = True
-    elif key == ord('t'):
+    elif key == ord('f'):
         # Play hanging light swing
         light_swinging = not light_swinging
         light_swing_speed = 0.5
@@ -1755,6 +1758,7 @@ def print_help_message():
     print("  Q/E - Turn camera left/right")
     print("  Z/X - Tilt camera up/down")
     print("  R   - Reset camera to home position")
+    print("  T   - Reset camera to original angle")
     # print("  Current Camera:", camera)
     
     print("\nLight Controls:")
@@ -1767,7 +1771,7 @@ def print_help_message():
     
     print("\nInteraction Controls:")
     print("  G - Roll the dice")
-    print("  T - Toggle hanging light swing")
+    print("  F - Toggle hanging light swing")
     
     print("\nSystem Controls:")
     print("  H - Show this help message")
