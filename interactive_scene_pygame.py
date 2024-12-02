@@ -914,7 +914,7 @@ def draw_objects():
     draw_ceiling(0, 40, 0, 80, 80, 10, 10)
     draw_side_table(-35, 0, -34)
     draw_desk_lamp(-32, 8.5, -36)
-    draw_dice(-37, 8.72, -34)
+    draw_dice(-37, 9, -34)
     draw_hanging_spotlight(0, 40, 0)
     draw_pool_table(table_x, 4, table_z)
     draw_balls()
@@ -1141,87 +1141,63 @@ def draw_single_dice(x, y, z, size, rotations=[0,0,0]):
     glRotatef(rotations[1], 0, 1, 0)
     glRotatef(rotations[2], 0, 0, 1) 
     
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [1.0, 1.0, 1.0, 1.0])
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [1.0, 1.0, 1.0, 1.0])
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
-    glMaterialf(GL_FRONT, GL_SHININESS, 0.0)
-    
-    glEnable(GL_TEXTURE_2D)
-    
-    def set_texture_params():
-        glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
-        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-    
     glBindTexture(GL_TEXTURE_2D, dice_texture_1)
-    set_texture_params()
-    glBegin(GL_QUADS)
-    glNormal3f(0, 0, 1)
-    glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, size)
-    glTexCoord2f(1.0, 0.0); glVertex3f(size, -size, size)
-    glTexCoord2f(1.0, 1.0); glVertex3f(size, size, size)
-    glTexCoord2f(0.0, 1.0); glVertex3f(-size, size, size)
-    glEnd()
+
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+
+    set_dice_material(GL_FRONT)
     
-    glBindTexture(GL_TEXTURE_2D, dice_texture_6)
-    set_texture_params()
-    glBegin(GL_QUADS)
-    glNormal3f(0, 0, -1)
-    glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, -size)
-    glTexCoord2f(1.0, 0.0); glVertex3f(-size, size, -size)
-    glTexCoord2f(1.0, 1.0); glVertex3f(size, size, -size)
-    glTexCoord2f(0.0, 1.0); glVertex3f(size, -size, -size)
-    glEnd()
-    
-    glBindTexture(GL_TEXTURE_2D, dice_texture_2)
-    set_texture_params()
-    glBegin(GL_QUADS)
-    glNormal3f(1, 0, 0)
-    glTexCoord2f(0.0, 0.0); glVertex3f(size, -size, -size)
-    glTexCoord2f(1.0, 0.0); glVertex3f(size, size, -size)
-    glTexCoord2f(1.0, 1.0); glVertex3f(size, size, size)
-    glTexCoord2f(0.0, 1.0); glVertex3f(size, -size, size)
-    glEnd()
-    
-    glBindTexture(GL_TEXTURE_2D, dice_texture_5)
-    set_texture_params()
-    glBegin(GL_QUADS)
-    glNormal3f(-1, 0, 0)
-    glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, -size)
-    glTexCoord2f(1.0, 0.0); glVertex3f(-size, -size, size)
-    glTexCoord2f(1.0, 1.0); glVertex3f(-size, size, size)
-    glTexCoord2f(0.0, 1.0); glVertex3f(-size, size, -size)
-    glEnd()
-    
-    glBindTexture(GL_TEXTURE_2D, dice_texture_3)
-    set_texture_params()
-    glBegin(GL_QUADS)
-    glNormal3f(0, 1, 0)
-    glTexCoord2f(0.0, 0.0); glVertex3f(-size, size, -size)
-    glTexCoord2f(1.0, 0.0); glVertex3f(-size, size, size)
-    glTexCoord2f(1.0, 1.0); glVertex3f(size, size, size)
-    glTexCoord2f(0.0, 1.0); glVertex3f(size, size, -size)
-    glEnd()
-    
-    glBindTexture(GL_TEXTURE_2D, dice_texture_4)
-    set_texture_params()
-    glBegin(GL_QUADS)
-    glNormal3f(0, -1, 0)
-    glTexCoord2f(0.0, 0.0); glVertex3f(-size, -size, -size)
-    glTexCoord2f(1.0, 0.0); glVertex3f(size, -size, -size)
-    glTexCoord2f(1.0, 1.0); glVertex3f(size, -size, size)
-    glTexCoord2f(0.0, 1.0); glVertex3f(-size, -size, size)
-    glEnd()
-    
-    glDisable(GL_TEXTURE_2D)
+    # Draw side 1 (+z)
+    glPushMatrix()
+    glTranslate(-size/2, -size/2, size/2)
+    draw_textured_plane(size, size, 5, 5, dice_texture_1)
+    glPopMatrix()
+
+    # Draw side 2 (-z)
+    glPushMatrix()
+    glTranslate(size/2, -size/2, -size/2)
+    glRotated(180, 0, 1, 0)
+    draw_textured_plane(size, size, 5, 5, dice_texture_6)
+    glPopMatrix()
+
+    # Draw side 3 (-x)
+    glPushMatrix()
+    glTranslate(-size/2, -size/2, -size/2)
+    glRotatef(-90, 0, 1, 0)
+    draw_textured_plane(size, size, 5, 5, dice_texture_5)
+    glPopMatrix()
+
+    # Draw side 4 (+x)
+    glPushMatrix()
+    glTranslatef(size/2, -size/2, size/2)
+    glRotatef(90, 0, 1, 0)
+    draw_textured_plane(size, size, 5, 5, dice_texture_2)
+    glPopMatrix()
+
+    # Draw side 5 (-y)
+    glPushMatrix()
+    glTranslatef(-size/2, -size/2, -size/2)
+    glRotatef(90, 1, 0, 0)
+    draw_textured_plane(size, size, 5, 5, dice_texture_4)
+    glPopMatrix()
+
+    # Draw side 6 (+y)
+    glPushMatrix()
+    glTranslatef(-size/2, size/2, size/2)
+    glRotatef(-90, 1, 0, 0)
+    draw_textured_plane(size, size, 5, 5, dice_texture_3)
+    glPopMatrix()
+
     glPopMatrix()
 
 def draw_dice(x, y, z):
-    draw_single_dice(x, y, z, 0.2, dice_rotation)
-    draw_single_dice(x + 1.2, y, z + 0.2, 0.2, dice_rotation2)
+    draw_single_dice(x, y, z, 0.5, dice_rotation)
+    draw_single_dice(x + 1.2, y, z + 0.2, 0.5, dice_rotation2)
 
 def draw_pool_table(x, y, z):
     # corners (3 x 2 x 3) # floor should be at midpoint level, hole extends down
@@ -2182,6 +2158,12 @@ def set_ball_material(face):
     glMaterialfv(face, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
     glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
     glMaterialf(face, GL_SHININESS, 10.0)
+
+def set_dice_material(face):
+    glMaterialfv(face, GL_AMBIENT, [0.5, 0.5, 0.5, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(face, GL_SHININESS, 0.0)
 
 #=======================================
 # Direct OpenGL Matrix Operation Examples
