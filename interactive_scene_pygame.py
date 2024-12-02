@@ -19,6 +19,9 @@ from light import *
 from PIL import Image
 import random
 
+# map of ball rotation matrices
+ball_rotation_matrices = {}
+
 class BilliardBall:
     def __init__(self, id, x, z):
         # identifier
@@ -29,7 +32,13 @@ class BilliardBall:
         self.z = z
         self.sunk = False
 
-        ball_initial_positions[id] = Point(x, 9.25, z)
+        # save the modelview matrix for rotations only
+        glPushMatrix()
+        glMatrixMode(GL_MODELVIEW)
+        glLoadIdentity()
+        glRotate(-90, 1, 0, 0)  # initial rotation
+        ball_rotation_matrices[id] = glGetFloatv(GL_MODELVIEW_MATRIX)
+        glPopMatrix()
 
         # movement info
         self.force_magnitude = 0
@@ -67,6 +76,9 @@ class BilliardBall:
             self.force_direction.dz = -self.force_direction.dz
 
     def advance(self):
+        self.distance_x = self.tx - self.x
+        self.distance_z = self.tz - self.z
+
         self.x = self.tx
         self.z = self.tz
 
@@ -293,8 +305,6 @@ angle_velocity_start = 0.0830
 ball_game_active = False
 cue_ball_angle = 0
 cue_ball_power = 2
-
-ball_initial_positions = {}
 
 # These parameters define simple animation properties
 FPS = 60.0  # frames per second
@@ -1850,7 +1860,7 @@ def draw_middle_hole(x, y, z):
 
     glPopMatrix()
 
-def draw_billiard_ball(x, y, z, id):
+def draw_billiard_ball(x, y, z, id, direction, x_distance, z_distance):
     glPushMatrix()
 
     texture = cue_ball_texture # temp, should not run
@@ -1878,20 +1888,30 @@ def draw_billiard_ball(x, y, z, id):
     glEnable(GL_TEXTURE_2D)
 
     glTranslatef(x, y, z)
-    # initial rotation
-    glRotatef(-90, 1, 0, 0)
+    glPushMatrix()
+    
+    # reapplying all rotations previously done
+    glMatrixMode(GL_MODELVIEW)
+    glLoadMatrixf(ball_rotation_matrices[id])
 
-    # TODO: determine correct way to save series of rotations
-    # to give the illusion of rolling, rotation is based on distance from start
-    #   based on arc length traveled
-    initial_pos = ball_initial_positions[id]
-    x_dist = x - initial_pos.x
-    z_dist = z - initial_pos.z
-    x_rotation = x_dist / 0.25
-    z_rotation = x_dist / 0.25
+    # determine new rotation axis
+    rotation_axis = direction.cross(up_vector)
+    rotation_axis.normalize()
 
-    glRotatef(math.degrees(z_rotation), 1, 0, 0)
-    glRotatef(math.degrees(x_rotation), 0, 0, 1)
+    # determine distance traveled (pythagorean theorem)
+    distance = math.sqrt(x_distance ** 2 + z_distance ** 2)
+    angle_traveled = distance / 0.25 # using distance as arc length
+
+    # perform rotation
+    glRotatef(math.degrees(angle_traveled), rotation_axis.dx, rotation_axis.dy, rotation_axis.dz)
+
+    # update matrix
+    ball_rotation_matrices[id] = glGetFloatv(GL_MODELVIEW_MATRIX)
+
+    # restore translated matrix
+    glPopMatrix()
+    glMultMatrixf(ball_rotation_matrices[id])
+
     gluSphere(ball, 0.25, 16, 16)
 
     glDisable(GL_TEXTURE_2D)
@@ -1942,7 +1962,7 @@ def draw_balls():
                 ball.force = 0
         else:
             if not ball.sunk:
-                draw_billiard_ball(ball.x, 9.25, ball.z, ball.id) # TODO: rotation
+                draw_billiard_ball(ball.x, 9.25, ball.z, ball.id, ball.force_direction, ball.distance_x, ball.distance_z) # TODO: rotation
 
 def draw_hanging_spotlight(x, y, z):
     # may need additional parameters for swinging
