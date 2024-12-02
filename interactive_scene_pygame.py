@@ -29,7 +29,7 @@ CAM_FAR = 1000.0
 CAM_ANGLE = 60.0
 
 # camera position at start
-start_camera_position = Point(0, 15, 40)
+start_camera_position = Point(0, 15, 35)
 
 # quadrics used for curved shapes
 tube = None
@@ -176,6 +176,7 @@ room_bounds = ((-40, -40), (40, 40))
 obstacles = [
     ((-39, -37), (-31, -31)),   # Side table boundaries
     ((-9, -5), (9, 5)),         # Pool table boundaries
+    ((-7.5, -40), (7.5, -39)),  # Wall painting boundaries
 ]
 
 # Window data
@@ -190,10 +191,10 @@ def main():
     init()
     global camera
     camera = Camera(CAM_ANGLE, window_dimensions[0]/window_dimensions[1], CAM_NEAR, CAM_FAR)
-    camera.eye = Point(0, 15, 40)  # Position the camera
+    camera.eye = start_camera_position  # Position the camera
     camera.look = Point(0, 0, 0)  # Look at the center of the scene
     camera.up = Vector(Point(0, 1, 0))  # Set up vector
-    camera.add_room_boundaries(room_bounds) # Add bounding box for room
+    camera.add_room_bounds(room_bounds) # Add bounding box for room
     camera.add_obstacle_bounding_boxes(obstacles) # Add bounding boxes for objects
 
     # Enters the main loop.   
@@ -607,7 +608,7 @@ def draw_objects():
     draw_pool_table(0, 4, 0)
     # ball bounds are x: [-7.25, 7.25] z: [-2.75, 2.75]
     draw_cue_ball(0, 9.25, 0) 
-    draw_wall_picture(0, 20, -39.5, 15, 15)
+    draw_wall_painting(0, 20, -39.5, 15, 15)
     glPopMatrix()
     
 #=======================================
@@ -1644,7 +1645,7 @@ def draw_hanging_spotlight(x, y, z):
 
 # TODO: implement disabling
 # draws a painting on the xy-plane based on the lighting
-def draw_wall_picture(x, y, z, width, height):
+def draw_wall_painting(x, y, z, width, height):
     # move to corner to draw the painting canvas
     glPushMatrix()
     glTranslatef(x - (width / 2), (y - height / 2), z)
