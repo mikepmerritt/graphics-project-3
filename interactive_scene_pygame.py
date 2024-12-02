@@ -52,15 +52,23 @@ class BilliardBall:
     def bounds_check(self, tolerance=0.25):
         # bounds check with walls and holes
         if self.tx < ball_min_x:
+            if self.tz > ball_max_z - 0.5 or self.tz < ball_min_z + 0.5:
+                self.sunk = True
             self.tx = (2 * ball_min_x) - self.tx
             self.force_direction.dx = -self.force_direction.dx
         elif self.tx > ball_max_x:
+            if self.tz > ball_max_z - 0.5 or self.tz < ball_min_z + 0.5:
+                self.sunk = True
             self.tx = (2 * ball_max_x) - self.tx
             self.force_direction.dx = -self.force_direction.dx
         if self.tz < ball_min_z:
+            if abs(table_x - self.tx) < 1 or self.tx > ball_max_x - 0.5 or self.tx < ball_min_x + 0.5:
+                self.sunk = True
             self.tz = (2 * ball_min_z) - self.tz
             self.force_direction.dz = -self.force_direction.dz
         elif self.tz > ball_max_z:
+            if abs(table_x - self.tx) < 1 or self.tx > ball_max_x -0.5 or self.tx < ball_min_x + 0.5:
+                self.sunk = True
             self.tz = (2 * ball_max_z) - self.tz
             self.force_direction.dz = -self.force_direction.dz
 
@@ -257,6 +265,8 @@ dice_rotation = [0, 0, 0]
 dice_rotation2 = [0, 0, 0]
 
 # Billiards state information
+has_won_before = False
+won_pool = False
 table_x = 0
 table_z = 0
 # ball bounds are x: [-7.25, 7.25] z: [-2.75, 2.75]
@@ -591,6 +601,23 @@ def advance():
             dice_rotation2 = [random.randint(0,3) * 90, random.randint(0,3) * 90, random.randint(0,3) * 90]
 
     # Billiards behaviors
+    # gamestate
+    global won_pool, has_won_before
+
+    if all_balls[0].sunk:
+        reset_balls()
+    
+    temp = True
+    for other_ball_index in range(1, len(all_balls)):
+        if not all_balls[other_ball_index].sunk:
+            temp = False
+
+    won_pool = temp
+
+    if won_pool and not has_won_before:
+        print("Great job sinking all the billiard balls without sinking the cue ball!")
+        has_won_before = True
+
     # try to move on its own
     for ball_index in range(len(all_balls)):
         if not all_balls[ball_index].sunk:
@@ -599,8 +626,8 @@ def advance():
     # check for interball collisions
     for ball_index in range(len(all_balls)):
         if not all_balls[ball_index].sunk:
-            for other_ball_index in range(ball_index + 1, len(all_balls)):
-                if not all_balls[other_ball_index].sunk:
+            for other_ball_index in range(len(all_balls)):
+                if all_balls[ball_index].id != all_balls[other_ball_index].id and not all_balls[other_ball_index].sunk:
                     all_balls[ball_index].compare(all_balls[other_ball_index])
 
     # actually move
@@ -1880,8 +1907,9 @@ def draw_cue_ball(x, y, z):
     glPopMatrix()
 
 def reset_balls():
-    global all_balls
+    global all_balls, won_pool
     all_balls = []
+    won_pool = False
     all_balls.append(BilliardBall(0, table_x + -2, table_z + 0))        # cue
     all_balls.append(BilliardBall(8, table_x + 2, table_z + 0))         # eight
     all_balls.append(BilliardBall(1, table_x + 2.4, table_z + 0.2))     # one
