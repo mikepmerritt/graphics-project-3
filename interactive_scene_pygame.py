@@ -817,17 +817,17 @@ def keyboard(event):
 
         if not ball_game_active:
             all_balls[0].force_magnitude = cue_ball_power
-            all_balls[0].force_direction = Vector(Point(math.cos(cue_ball_angle), 0, math.sin(cue_ball_angle)))
+            all_balls[0].force_direction = Vector(Point(math.cos(math.radians(cue_ball_angle)), 0, -math.sin(math.radians(cue_ball_angle))))
             all_balls[0].force_direction.normalize()
 
     # custom controls for the ball game
     if ball_game_active:
         if key == pygame.K_LEFT:
             # rotate hit angle left
-            cue_ball_angle += 1
+            cue_ball_angle += 2
         elif key == pygame.K_RIGHT:
             # rotate hit angle right
-            cue_ball_angle -= 1
+            cue_ball_angle -= 2
         elif key == pygame.K_UP:
             # increase power up to 4
             cue_ball_power += 0.1
