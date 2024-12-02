@@ -32,10 +32,11 @@ class BilliardBall:
         # movement info
         self.force_magnitude = 0
         self.force_direction = Vector(Point(0, 0, 0))
-        if id == 0:
-            self.force_magnitude = 4
-            self.force_direction = Vector(Point(1, 0, 0))
-            self.force_direction.normalize()
+        # DEBUG: initial cue ball speed
+        # if id == 0:
+        #     self.force_magnitude = 4
+        #     self.force_direction = Vector(Point(1, 0, 0))
+        #     self.force_direction.normalize()
 
         # "try" positions - where the ball wants to go, used in advance
         self.tx = x
@@ -284,6 +285,11 @@ light_angle_velocity = 0
 light_angle_acceleration = 0
 gravity = 1
 angle_velocity_start = 0.0830
+
+# State information for the ball minigame
+ball_game_active = False
+cue_ball_angle = 0
+cue_ball_power = 2
 
 # These parameters define simple animation properties
 FPS = 60.0  # frames per second
@@ -725,7 +731,7 @@ def advance():
 # Function used to handle any key events
 # event: The keyboard event that happened
 def keyboard(event):
-    global running, dice_animating, hanging_light_switched_on, light_swinging, light_should_swing, light_angle_velocity
+    global running, dice_animating, hanging_light_switched_on, light_swinging, light_should_swing, light_angle_velocity, ball_game_active, cue_ball_angle, cue_ball_power
     key = event.key # "ASCII" value of the key pressed
     if key == 27:  # ASCII code 27 = ESC-key
         running = False
@@ -802,6 +808,31 @@ def keyboard(event):
         # Start the light slowing down if moving
         elif light_swinging and light_should_swing:
             light_should_swing = False
+    elif key == ord(' '):
+        # enabling the billiard ball game interactions
+        ball_game_active = not ball_game_active
+
+        if not ball_game_active:
+            all_balls[0].force_magnitude = cue_ball_power
+            all_balls[0].force_direction = Vector(Point(math.cos(cue_ball_angle), 0, math.sin(cue_ball_angle)))
+            all_balls[0].force_direction.normalize()
+
+    # custom controls for the ball game
+    if ball_game_active:
+        if key == pygame.K_LEFT:
+            # rotate hit angle left
+            cue_ball_angle += 1
+        elif key == pygame.K_RIGHT:
+            # rotate hit angle right
+            cue_ball_angle -= 1
+        elif key == pygame.K_UP:
+            # increase power up to 4
+            cue_ball_power += 0.1
+            cue_ball_power = min(cue_ball_power, 4)
+        elif key == pygame.K_DOWN:
+            # decrease power down to 0.1
+            cue_ball_power -= 0.1
+            cue_ball_power = max(cue_ball_power, 0.1)
 
 # function to set up the camera, lights, and world
 def draw_scene():
@@ -884,6 +915,8 @@ def draw_objects():
     draw_hanging_spotlight(0, 40, 0)
     draw_pool_table(table_x, 4, table_z)
     draw_balls()
+    if ball_game_active:
+        draw_ball_game_indicator()
     draw_wall_painting(0, 20, -39.5, 15, 15)
     glPopMatrix()
     
@@ -2144,6 +2177,30 @@ def draw_trapezoidal_prism(x, y, z, x_size, y_size, z_size, x_slices, y_slices, 
     # glPopMatrix()
 
     # return
+    glPopMatrix()
+
+def draw_ball_game_indicator():
+    glPushMatrix()
+    # move to cue ball position
+    glTranslatef(all_balls[0].x, 9.25, all_balls[0].z)
+    # rotate to cue ball angle
+    glRotatef(90 + cue_ball_angle, 0, 1, 0)
+    # move slightly forward
+    glTranslatef(0, 0, 0.5)
+
+    set_cue_ball_material(GL_FRONT_AND_BACK)
+    glBindTexture(GL_TEXTURE_2D, cue_ball_texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) 
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+    gluCylinder(tube, 0.05, 0.05, cue_ball_power * 0.25, 32, 2)  
+    glDisable(GL_TEXTURE_2D)
     glPopMatrix()
 
 # TODO: implement
