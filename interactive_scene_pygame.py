@@ -802,6 +802,9 @@ def keyboard(event):
         # Start the light slowing down if moving
         elif light_swinging and light_should_swing:
             light_should_swing = False
+    elif key == ord('p'):
+        # reset pool balls
+        reset_balls()
 
 # function to set up the camera, lights, and world
 def draw_scene():
@@ -874,7 +877,6 @@ def place_lights():
 # function to draw the actual elements and objects in the room
 def draw_objects():
     glPushMatrix()
-    # TODO: add function calls here
     draw_floor(0, 0, 0, 80, 80, 10, 10)
     draw_walls(0, 0, 0, 80, 40, 10, 5)
     draw_ceiling(0, 40, 0, 80, 80, 10, 10)
@@ -1271,7 +1273,6 @@ def draw_dice(x, y, z):
     draw_single_dice(x, y, z, 0.2, dice_rotation)
     draw_single_dice(x + 1.2, y, z + 0.2, 0.2, dice_rotation2)
 
-# TODO: implement
 def draw_pool_table(x, y, z):
     # corners (3 x 2 x 3) # floor should be at midpoint level, hole extends down
 
@@ -1472,8 +1473,6 @@ def draw_hole_insides(start_angle, end_angle, turn_amount, height):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
 
-    # TODO: texture configuration, for if a different one is used
-
     dtheta = turn_amount
     theta = start_angle
 
@@ -1494,7 +1493,7 @@ def draw_hole_insides(start_angle, end_angle, turn_amount, height):
         glTranslate(prev[0], -0.75, prev[1])
         glRotatef(-90, 0, 1, 0)
         glRotatef(math.degrees(((math.pi / 2) - (turn_amount / 2) + theta)), 0, 1, 0)
-        draw_textured_plane(size, height, 3, 3, felt_texture) # TODO: change texture
+        draw_textured_plane(size, height, 3, 3, felt_texture)
         glPopMatrix()
 
         prev = (vx, vz)
@@ -1595,7 +1594,7 @@ def draw_corner(x, y, z):
     glPopMatrix()
 
     # felt section
-    set_felt_material(GL_FRONT_AND_BACK) # TODO: fix normals and revert to front if possible
+    set_felt_material(GL_FRONT_AND_BACK)
     glBindTexture(GL_TEXTURE_2D, felt_texture)
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
@@ -1932,7 +1931,6 @@ def draw_billiard_ball(x, y, z, id, x_rotation=-90, z_rotation=0):
 
     glPopMatrix()
 
-# TODO: implement
 def draw_cue_ball(x, y, z):
     glPushMatrix()
 
@@ -2007,11 +2005,13 @@ def draw_hanging_spotlight(x, y, z):
 
     # drawing the hanging light pole
     glTranslatef(0, -pole_height, 0)
+    glPushMatrix()
+    glTranslatef(0, 0.1, 0)
     glRotatef(-90, 1, 0, 0)
     set_aluminum_material(GL_FRONT_AND_BACK)
     # parameters are: quadric, base radius, height radius, height, slices, stacks
     gluCylinder(tube, pole_radius, pole_radius, pole_height, 30, 10)
-    glRotatef(90, 1, 0, 0)
+    glPopMatrix()
 
     # Disabling texturing mode to switch texture
     glDisable(GL_TEXTURE_2D)
