@@ -53,6 +53,12 @@ dice_texture_3 = None
 dice_texture_4 = None
 dice_texture_5 = None
 dice_texture_6 = None
+cue_ball_texture = None
+one_ball_texture = None
+three_ball_texture = None
+eight_ball_texture = None
+ten_ball_texture = None
+fourteen_ball_texture = None
 library_painting_texture = None
 
 # Dice state information
@@ -209,7 +215,7 @@ def init():
     # quadrics
     global tube, ball, disk
     # textures
-    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, ceiling_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture, library_painting_texture
+    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, ceiling_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture, cue_ball_texture, one_ball_texture, three_ball_texture, eight_ball_texture, ten_ball_texture, fourteen_ball_texture, library_painting_texture
 
     # pygame setup
     pygame.init()
@@ -234,6 +240,12 @@ def init():
     dice_texture_4 = load_texture("dice_4.jpg", 512)
     dice_texture_5 = load_texture("dice_5.jpg", 512)
     dice_texture_6 = load_texture("dice_6.jpg", 512)
+    cue_ball_texture = load_texture("cue.jpg", 512)
+    one_ball_texture = load_texture("ball1_squish.jpg", 1024)
+    three_ball_texture = load_texture("ball3_squish.jpg", 1024)
+    eight_ball_texture = load_texture("ball8_squish.jpg", 1024)
+    ten_ball_texture = load_texture("ball10_squish.jpg", 1024)
+    fourteen_ball_texture = load_texture("ball14_squish.jpg", 1024)
     library_painting_texture = load_texture("library_painting.jpg", 2048)
     floor_texture = generate_checkerboard_texture(4, 4, 1, [[139, 69, 19, 255], [205, 133, 63, 255]]) 
 
@@ -617,6 +629,11 @@ def draw_objects():
     draw_pool_table(0, 4, 0)
     # ball bounds are x: [-7.25, 7.25] z: [-2.75, 2.75]
     draw_cue_ball(0, 9.25, 0) 
+    draw_billiard_ball(2, 9.25, 0, one_ball_texture)
+    draw_billiard_ball(2.5, 9.25, 0.5, three_ball_texture)
+    draw_billiard_ball(2.5, 9.25, -0.5, eight_ball_texture)
+    draw_billiard_ball(3, 9.25, 1, ten_ball_texture)
+    draw_billiard_ball(3, 9.25, -1, fourteen_ball_texture)
     draw_wall_painting(0, 20, -39.5, 15, 15)
     glPopMatrix()
     
@@ -1044,29 +1061,29 @@ def draw_pool_table(x, y, z):
 
     glPopMatrix()
 
-    # x-aligned wood segments (5 x 1.5 x 1)
+    # x-aligned wood segments (5 x 1.5 x 1.5)
     set_wood_support_material(GL_FRONT)
-    draw_rect(x - 4, y + 4.75, z - 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture, False)
-    draw_rect(x + 4, y + 4.75, z - 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture, False)
-    draw_rect(x - 4, y + 4.75, z + 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture, False)
-    draw_rect(x + 4, y + 4.75, z + 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture, False)
+    draw_rect(x - 4, y + 4.75, z - 4.25, 5, 1.5, 1.5, 10, 4, 3, table_support_texture, False)
+    draw_rect(x + 4, y + 4.75, z - 4.25, 5, 1.5, 1.5, 10, 4, 3, table_support_texture, False)
+    draw_rect(x - 4, y + 4.75, z + 4.25, 5, 1.5, 1.5, 10, 4, 3, table_support_texture, False)
+    draw_rect(x + 4, y + 4.75, z + 4.25, 5, 1.5, 1.5, 10, 4, 3, table_support_texture, False)
 
-    # x-aligned felt segments (5 x 1.5 x 1)
+    # x-aligned felt segments (5 x 1.5 x 0.5)
     set_felt_material(GL_FRONT)
-    draw_rect(x - 4, y + 4.75, z - 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture, False)
-    draw_rect(x + 4, y + 4.75, z - 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture, False)
-    draw_rect(x - 4, y + 4.75, z + 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture, False)
-    draw_rect(x + 4, y + 4.75, z + 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture, False)
+    draw_rect(x - 4, y + 4.75, z - 3.25, 5, 1.5, 0.5, 10, 4, 1, felt_texture, False)
+    draw_rect(x + 4, y + 4.75, z - 3.25, 5, 1.5, 0.5, 10, 4, 1, felt_texture, False)
+    draw_rect(x - 4, y + 4.75, z + 3.25, 5, 1.5, 0.5, 10, 4, 1, felt_texture, False)
+    draw_rect(x + 4, y + 4.75, z + 3.25, 5, 1.5, 0.5, 10, 4, 1, felt_texture, False)
 
-    # z-aligned wood segments (1 x 1.5 x 4)
+    # z-aligned wood segments (1.5 x 1.5 x 4)
     set_wood_support_material(GL_FRONT)
-    draw_rect(x - 9, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, table_support_texture, False)
-    draw_rect(x + 9, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, table_support_texture, False)
+    draw_rect(x - 8.75, y + 4.75, z, 1.5, 1.5, 4, 3, 4, 8, table_support_texture, False)
+    draw_rect(x + 8.75, y + 4.75, z, 1.5, 1.5, 4, 3, 4, 8, table_support_texture, False)
 
-    # z-aligned felt segments (1 x 1.5 x 4)
+    # z-aligned felt segments (0.5 x 1.5 x 4)
     set_felt_material(GL_FRONT)
-    draw_rect(x - 8, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, felt_texture, False)
-    draw_rect(x + 8, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, felt_texture, False)
+    draw_rect(x - 7.75, y + 4.75, z, 0.5, 1.5, 4, 3, 4, 8, felt_texture, False)
+    draw_rect(x + 7.75, y + 4.75, z, 0.5, 1.5, 4, 3, 4, 8, felt_texture, False)
 
     # felt play area (15 x 1 x 6) minus corners
     set_felt_material(GL_FRONT)
@@ -1080,16 +1097,16 @@ def draw_pool_table(x, y, z):
     draw_rect(x - 7, y + 4.5, z, 1, 1, 4, 1, 1, 4, felt_texture, False)
     draw_rect(x + 7, y + 4.5, z, 1, 1, 4, 1, 1, 4, felt_texture, False)
 
-    # wood bottom middle (19 x 1 x 6)
+    # wood bottom middle (19 x 1 x 10)
     set_wood_support_material(GL_FRONT)
     draw_rect(x, y + 3.5, z, 19, 1, 10, 19, 1, 10, table_support_texture, False)
 
-    # wood legs (3 x 8 x 3)
+    # wood legs (3 x 7 x 3)
     set_wood_support_material(GL_FRONT)
-    draw_rect(x - 6, y, z - 2.5, 3, 8, 3, 3, 8, 3, table_support_texture, False)
-    draw_rect(x + 6, y, z - 2.5, 3, 8, 3, 3, 8, 3, table_support_texture, False)
-    draw_rect(x - 6, y, z + 2.5, 3, 8, 3, 3, 8, 3, table_support_texture, False)
-    draw_rect(x + 6, y, z + 2.5, 3, 8, 3, 3, 8, 3, table_support_texture, False)
+    draw_rect(x - 6, y - 0.5, z - 2.5, 3, 7, 3, 3, 7, 3, table_support_texture, False)
+    draw_rect(x + 6, y - 0.5, z - 2.5, 3, 7, 3, 3, 7, 3, table_support_texture, False)
+    draw_rect(x - 6, y - 0.5, z + 2.5, 3, 7, 3, 3, 7, 3, table_support_texture, False)
+    draw_rect(x + 6, y - 0.5, z + 2.5, 3, 7, 3, 3, 7, 3, table_support_texture, False)
 
 def draw_textured_plane(x_size, y_size, x_slices, y_slices, texture, stretch=True):
     """ Draw a textured plane of the specified dimensions on the xy-plane.
@@ -1193,6 +1210,82 @@ def draw_rect(x, y, z, x_size, y_size, z_size, x_slices, y_slices, z_slices, tex
     # return
     glPopMatrix()
 
+def draw_hole_insides(start_angle, end_angle, turn_amount, height):
+    glPushMatrix()
+
+    # TODO: texture configuration, for if a different one is used
+
+    dtheta = turn_amount
+    theta = start_angle
+
+    prev = (math.sin(theta), math.cos(theta)) # first/start point for panel
+
+    while theta < end_angle:
+        theta += dtheta # go to second point in panel
+
+        vx = math.sin(theta)
+        vz = math.cos(theta)
+
+        curr = (vx, vz)
+
+        # draw the panel
+        size = math.sqrt((curr[0] - prev[0])**2 + (curr[1] - prev[1])**2)
+
+        glPushMatrix()
+        glTranslate(prev[0], -0.75, prev[1])
+        glRotatef(-90, 0, 1, 0)
+        glRotatef(math.degrees(((math.pi / 2) - (turn_amount / 2) + theta)), 0, 1, 0)
+        draw_textured_plane(size, height, 3, 3, felt_texture) # TODO: change texture
+        glPopMatrix()
+
+        prev = (vx, vz)
+
+    glPopMatrix()
+
+# for drawing L-shaped rounded planes with upwards-facing normals
+# only use on quadrantal angles
+def draw_quarter_rim(start_angle, end_angle, turn_amount, corner_x, corner_z, entry_x, entry_z, exit_x, exit_z):
+    glPushMatrix() 
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+
+    glNormal3f(0, -1, 0)
+
+    glBegin(GL_TRIANGLE_FAN)
+    glTexCoord2f(corner_x, corner_z)
+    glVertex3f(corner_x, 0, corner_z)
+    glTexCoord2f(entry_x, entry_z)
+    glVertex3f(entry_x, 0, entry_z)
+
+    dtheta = turn_amount
+    theta = start_angle
+
+    while theta < end_angle:
+        vx = math.sin(theta)
+        vz = math.cos(theta)
+
+        glTexCoord2f(vx, vz)
+        glVertex3f(vx, 0, vz) # point on circle
+
+        theta += dtheta
+
+    theta = end_angle # end goal
+    vx = math.sin(theta)
+    vz = math.cos(theta)
+
+    glTexCoord2f(vx, vz)
+    glVertex3f(vx, 0, vz) # last point on circle
+
+    glTexCoord2f(exit_x, exit_z)
+    glVertex3f(exit_x, 0, exit_z)
+
+    glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
+
 def draw_corner(x, y, z):
     # note: faces that would be otherwise fully included in the structure are not drawn
     # this includes stuff like the seam between the felt and wood, and so on
@@ -1215,96 +1308,24 @@ def draw_corner(x, y, z):
     # back
     glPushMatrix()
     glTranslate(-1.5, -0.75, 1.5)
-    draw_textured_plane(3, 1.5, 6, 4, table_support_texture)
+    draw_textured_plane(3, 1.5, 6, 4, table_support_texture, False)
     glPopMatrix()
 
     # side
     glPushMatrix()
     glTranslate(-1.5, -0.75, -1.5)
     glRotatef(-90, 0, 1, 0)
-    draw_textured_plane(3, 1.5, 6, 4, table_support_texture)
+    draw_textured_plane(3, 1.5, 6, 4, table_support_texture, False)
     glPopMatrix()
 
     # wood corner top
     glPushMatrix()
 
-    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
-    glEnable(GL_TEXTURE_2D)
+    glTranslatef(0, 0.75, 0)
 
-    glNormal3f(0, 1, 0)
-    
-    glBegin(GL_TRIANGLE_STRIP)
-    glTexCoord2f(0, -1)
-    glVertex3f(0, 0.75, -1) # top circle (1)
-    glTexCoord2f(-0.5, -1.5)
-    glVertex3f(-0.5, 0.75, -1.5) # top mid (2)
-    glTexCoord2f(-1.1, -1.1)
-    glVertex3f(-1.1, 0.75, -1.1) # temp top left (3)
-    glTexCoord2f(-1.5, -1.5)
-    glVertex3f(-1.5, 0.75, -1.5) # top left (4)
-    glTexCoord2f(-1.1, 1.1)
-    glVertex3f(-1.1, 0.75, 1.1) # temp bottom left (5)
-    glTexCoord2f(-1.5, 1.5)
-    glVertex3f(-1.5, 0.75, 1.5) # bottom left (6)
-    glTexCoord2f(0, 1.1)
-    glVertex3f(0, 0.75, 1.1) # temp bottom middle (7)
-    glTexCoord2f(1.5, 1.5)
-    glVertex3f(1.5, 0.75, 1.5) # bottom right (8)
-    glTexCoord2f(1.1, 1.1)
-    glVertex3f(1.1, 0.75, 1.1) # temp bottom right (9)
-    glTexCoord2f(1.5, 0.5)
-    glVertex3f(1.5, 0.75, 0.5) # right mid (10)
-    glTexCoord2f(1, 0)
-    glVertex3f(1, 0.75, 0) # right circle (11)
-    glEnd()
-
-    glDisable(GL_TEXTURE_2D)
-
-    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
-    glEnable(GL_TEXTURE_2D)
-
-    glNormal3f(0, 1, 0)
-
-    glBegin(GL_TRIANGLE_STRIP)
-    dtheta = math.pi / 4
-    theta = math.pi
-
-    glTexCoord2f(0, -1)
-    glVertex3f(0, 0.75, -1) # top circle (1)
-
-    glTexCoord2f(-1.1, -1.1)
-    glVertex3f(-1.1, 0.75, -1.1) # temp top left (3)
-
-    theta += dtheta
-
-    while theta < 5 * math.pi / 2:
-        vx = math.sin(theta)
-        vz = math.cos(theta)
-
-        glTexCoord2f(vx, vz)
-        glVertex3f(vx, 0.75, vz) # point on circle
-
-        if(theta == 7 * math.pi / 4):
-            glTexCoord2f(-1.1, 1.1)
-            glVertex3f(-1.1, 0.75, 1.1) # temp bottom left (5)
-        elif(theta > 7 * math.pi / 4):
-            glTexCoord2f(vx, 1.1)
-            glVertex3f(vx, 0.75, 1.1) # along bottom edge
-        else:
-            glTexCoord2f(-1.1, vz)
-            glVertex3f(-1.1, 0.75, vz) # along left edge
-
-        theta += dtheta
-    
-    glTexCoord2f(1, 0)
-    glVertex3f(1, 0.75, 0) # right circle (11)
-
-    glTexCoord2f(1.1, 1.1)
-    glVertex3f(1.1, 0.75, 1.1) # temp bottom right (9)
-
-    glEnd()
-
-    glDisable(GL_TEXTURE_2D)
+    draw_quarter_rim(math.pi, 3 * math.pi / 2, math.pi / 16, -1.5, -1.5, 0, -1.5, -1.5, 0) # top left
+    draw_quarter_rim(3 * math.pi / 2, 2 * math.pi, math.pi / 16, -1.5, 1.5, -1.5, 0, 0, 1.5) # bottom left
+    draw_quarter_rim(0, math.pi / 2, math.pi / 16, 1.5, 1.5, 0, 1.5, 1.5, 0) # bottom right
 
     glPopMatrix()
 
@@ -1318,168 +1339,27 @@ def draw_corner(x, y, z):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
 
-    # felt triangle (top)
-
-    # felt entryway
+    # slope in on top
     glPushMatrix()
 
     # Enable/Disable each time or OpenGL ALWAYS expects texturing!
     glEnable(GL_TEXTURE_2D)
 
-    glNormal3f(0, -1, 0)
-
-    glBegin(GL_TRIANGLE_FAN)
-    glTexCoord2f(1.5, -1.5)
-    glVertex3f(1.5, 0.25, -1.5)
-    glTexCoord2f(1.5, 0)
-    glVertex3f(1.5, 0.25, 0)
-
-    dtheta = math.pi / 4
-    theta = math.pi / 2
-
-    while theta < math.pi:
-        vx = math.sin(theta)
-        vz = math.cos(theta)
-
-        glTexCoord2f(vx, vz)
-        glVertex3f(vx, 0.25, vz) # point on circle
-
-        theta += dtheta
-
-    theta = math.pi # end goal
-    vx = math.sin(theta)
-    vz = math.cos(theta)
-
-    glTexCoord2f(vx, vz)
-    glVertex3f(vx, 0.25, vz) # last point on circle
-
-    glTexCoord2f(0, -1.5)
-    glVertex3f(0, 0.25, -1.5)
-
-    glEnd()
-
-    glDisable(GL_TEXTURE_2D)
-
-    glPopMatrix()
-
-    # black section
-    # TODO: texture setup
-
-    # black cylinder liner (outer)
-
-    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
-    glEnable(GL_TEXTURE_2D)
-
-    dtheta = math.pi / 4
-    theta = math.pi
-
-    prev = (math.sin(theta), math.cos(theta)) # first/start point for panel
-
-    while theta < 5 * math.pi / 2:
-        theta += dtheta # go to second point in panel
-
-        vx = math.sin(theta)
-        vz = math.cos(theta)
-
-        curr = (vx, vz)
-
-        # draw the panel
-        size = math.sqrt((curr[0] - prev[0])**2 + (curr[1] - prev[1])**2)
-
-        glPushMatrix()
-        glTranslate(prev[0], -0.75, prev[1])
-        glRotatef(-90, 0, 1, 0)
-        glRotatef(math.degrees((3 * math.pi/8 + theta)), 0, 1, 0)
-        draw_textured_plane(size, 1.5, 3, 3, felt_texture)
-        glPopMatrix()
-
-        prev = (vx, vz)
-
-    glDisable(GL_TEXTURE_2D)
-
-    # black cylinder liner (inner)
-
-    dtheta = math.pi / 4
-    theta = math.pi / 2
-
-    prev = (math.sin(theta), math.cos(theta)) # first/start point for panel
-
-    while theta < math.pi:
-        theta += dtheta # go to second point in panel
-
-        vx = math.sin(theta)
-        vz = math.cos(theta)
-
-        curr = (vx, vz)
-
-        # draw the panel
-        size = math.sqrt((curr[0] - prev[0])**2 + (curr[1] - prev[1])**2)
-
-        glPushMatrix()
-        glTranslate(prev[0], -0.75, prev[1])
-        glRotatef(-90, 0, 1, 0)
-        glRotatef((3 * math.pi/8 + theta) * 180 / math.pi, 0, 1, 0)
-        draw_textured_plane(size, 1, 3, 3, felt_texture)
-        glPopMatrix()
-
-        prev = (vx, vz)
-
-    glPopMatrix()
-
-def draw_middle_hole(x, y, z):
-    glPushMatrix()
-
-    glTranslatef(x, y, z)
-
-    # wood section
-    set_wood_support_material(GL_FRONT)
-    glBindTexture(GL_TEXTURE_2D, table_support_texture)
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-
-    draw_rect(-1.25, 0, 1, 0.5, 1.5, 1, 1, 3, 2, table_support_texture, False) # left
-    draw_rect(1.25, 0, 1, 0.5, 1.5, 1, 1, 3, 2, table_support_texture, False) # right
-    draw_rect(0, 0, 1.375, 3, 1.5, 0.25, 12, 6, 4, table_support_texture, False) # back
-
-    # felt section
-    set_felt_material(GL_FRONT_AND_BACK)
-    glBindTexture(GL_TEXTURE_2D, felt_texture)
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-
-    draw_rect(-1.25, 0, 0.375, 0.5, 1.5, 0.25, 2, 6, 1, felt_texture, False) # left box
-    draw_rect(1.25, 0, 0.375, 0.5, 1.5, 0.25, 2, 6, 1, felt_texture, False) # right box
-    draw_rect(0, -0.25, -1.125, 3, 1, 0.75, 12, 4, 3, felt_texture, False) # right box
-
-    # slope in on left
-    glPushMatrix()
-
-    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
-    glEnable(GL_TEXTURE_2D)
-    
-    glNormal3f(0.75, 0, -0.5)
+    glNormal3f(0.5, 0, 0.5)
 
     glBegin(GL_TRIANGLE_FAN)
 
     glTexCoord2f(0, 0)
-    glVertex3f(-1, 0, 0.25)
+    glVertex3f(0, 0, -1)
 
     glTexCoord2f(0, 1)
-    glVertex3f(-1, 0.75, 0.25)
+    glVertex3f(0, 0.75, -1)
 
     glTexCoord2f(1, 1)
-    glVertex3f(-1.5, 0.75, -0.5)
+    glVertex3f(0.5, 0.75, -1.5)
 
     glTexCoord2f(1, 0)
-    glVertex3f(-1.5, 0, -0.5)
+    glVertex3f(0.5, 0, -1.5)
 
     glEnd()
 
@@ -1487,8 +1367,7 @@ def draw_middle_hole(x, y, z):
 
     glPopMatrix()
 
-    # top left
-
+    # top of top
     glPushMatrix()
 
     glNormal3f(0, 1, 0)
@@ -1498,14 +1377,14 @@ def draw_middle_hole(x, y, z):
     
     glBegin(GL_TRIANGLE_FAN)
 
-    glTexCoord2f(1, 0.25)
-    glVertex3f(-1, 0.75, 0.25)
+    glTexCoord2f(0, -1)
+    glVertex3f(0, 0.75, -1)
 
-    glTexCoord2f(1.5, 0.25)
-    glVertex3f(-1.5, 0.75, 0.25)
+    glTexCoord2f(0, -1.5)
+    glVertex3f(0, 0.75, -1.5)
 
-    glTexCoord2f(1.5, -0.5)
-    glVertex3f(-1.5, 0.75, -0.5)
+    glTexCoord2f(0.5, -1.5)
+    glVertex3f(0.5, 0.75, -1.5)
 
     glEnd()
 
@@ -1513,22 +1392,21 @@ def draw_middle_hole(x, y, z):
 
     glPopMatrix()
 
-    # slope on right
-
+    # right
     glPushMatrix()
 
     # Enable/Disable each time or OpenGL ALWAYS expects texturing!
     glEnable(GL_TEXTURE_2D)
     
-    glNormal3f(0.5, 0, -0.75)
+    glNormal3f(0.5, 0, -0.5)
 
     glBegin(GL_TRIANGLE_FAN)
 
     glTexCoord2f(0, 0)
-    glVertex3f(1, 0, 0.25)
+    glVertex3f(1, 0, 0)
 
     glTexCoord2f(0, 1)
-    glVertex3f(1, 0.75, 0.25)
+    glVertex3f(1, 0.75, 0)
 
     glTexCoord2f(1, 1)
     glVertex3f(1.5, 0.75, -0.5)
@@ -1553,11 +1431,11 @@ def draw_middle_hole(x, y, z):
     
     glBegin(GL_TRIANGLE_FAN)
 
-    glTexCoord2f(-1, 0.25)
-    glVertex3f(1, 0.75, 0.25)
+    glTexCoord2f(-1, 0)
+    glVertex3f(1, 0.75, 0)
 
-    glTexCoord2f(-1.5, 0.25)
-    glVertex3f(1.5, 0.75, 0.25)
+    glTexCoord2f(-1.5, 0)
+    glVertex3f(1.5, 0.75, 0)
 
     glTexCoord2f(-1.5, -0.5)
     glVertex3f(1.5, 0.75, -0.5)
@@ -1568,19 +1446,238 @@ def draw_middle_hole(x, y, z):
 
     glPopMatrix()
 
+    # felt entryway
+    glPushMatrix()
 
+    glTranslatef(0, 0.25, 0)
+
+    draw_quarter_rim(math.pi / 2, math.pi, math.pi / 16, 1.5, -1.5, 1.5, 0, 0, -1.5) # top right
+
+    glPopMatrix()
+
+    # black section
+    # TODO: texture parameter?
+
+    # black cylinder liner
+    draw_hole_insides(math.pi, 5 * math.pi / 2, math.pi / 16, 1.5) # outer
+    draw_hole_insides(math.pi / 2, math.pi, math.pi / 16, 1) # inner
+
+    glPopMatrix()
+
+def draw_middle_hole(x, y, z):
+    glPushMatrix()
+
+    glTranslatef(x, y, z)
+
+    # wood section
+    set_wood_support_material(GL_FRONT)
+    glBindTexture(GL_TEXTURE_2D, table_support_texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    # back wooden part entryway
+    glPushMatrix()
+
+    glTranslate(0, 0.75, 0) # offset center
+
+    draw_quarter_rim(3 * math.pi / 2, 2 * math.pi, math.pi / 16, -1.5, 1.5, -1.5, 0, 0, 1.5) # left
+    draw_quarter_rim(0, math.pi / 2, math.pi / 16, 1.5, 1.5, 0, 1.5, 1.5, 0) # right
+
+    glPopMatrix()
+
+    # wooden back panel
+    glPushMatrix()
+    glTranslate(-1.5, -0.75, 1.5)
+    draw_textured_plane(3, 1.5, 6, 4, table_support_texture, False)
+    glPopMatrix()
+
+    # felt section
+    set_felt_material(GL_FRONT_AND_BACK)
+    glBindTexture(GL_TEXTURE_2D, felt_texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    # slope in on left
+    glPushMatrix()
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+    
+    glNormal3f(0.5, 0, -0.5)
+
+    glBegin(GL_TRIANGLE_FAN)
+
+    glTexCoord2f(0, 0)
+    glVertex3f(-1, 0, 0)
+
+    glTexCoord2f(0, 1)
+    glVertex3f(-1, 0.75, 0)
+
+    glTexCoord2f(1, 1)
+    glVertex3f(-1.5, 0.75, -0.5)
+
+    glTexCoord2f(1, 0)
+    glVertex3f(-1.5, 0, -0.5)
+
+    glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
+
+    # top left
+
+    glPushMatrix()
+
+    glNormal3f(0, 1, 0)
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+    
+    glBegin(GL_TRIANGLE_FAN)
+
+    glTexCoord2f(1, 0)
+    glVertex3f(-1, 0.75, 0)
+
+    glTexCoord2f(1.5, 0)
+    glVertex3f(-1.5, 0.75, 0)
+
+    glTexCoord2f(1.5, -0.5)
+    glVertex3f(-1.5, 0.75, -0.5)
+
+    glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
+
+    # felt entryway
+    glPushMatrix()
+
+    glTranslate(0, 0.25, 0) # offset center
+
+    draw_quarter_rim(math.pi, 3 * math.pi / 2, math.pi / 16, -1.5, -1.5, 0, -1.5, -1.5, 0) # left
+    draw_quarter_rim(math.pi / 2, math.pi, math.pi / 16, 1.5, -1.5, 1.5, 0, 0, -1.5) # right
+
+    glPopMatrix()
+
+    # slope on right
+
+    glPushMatrix()
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+    
+    glNormal3f(0.5, 0, -0.5)
+
+    glBegin(GL_TRIANGLE_FAN)
+
+    glTexCoord2f(0, 0)
+    glVertex3f(1, 0, 0)
+
+    glTexCoord2f(0, 1)
+    glVertex3f(1, 0.75, 0)
+
+    glTexCoord2f(1, 1)
+    glVertex3f(1.5, 0.75, -0.5)
+
+    glTexCoord2f(1, 0)
+    glVertex3f(1.5, 0, -0.5)
+
+    glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
+
+    # top right
+
+    glPushMatrix()
+
+    glNormal3f(0, 1, 0)
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+    
+    glBegin(GL_TRIANGLE_FAN)
+
+    glTexCoord2f(-1, 0)
+    glVertex3f(1, 0.75, 0)
+
+    glTexCoord2f(-1.5, 0)
+    glVertex3f(1.5, 0.75, 0)
+
+    glTexCoord2f(-1.5, -0.5)
+    glVertex3f(1.5, 0.75, -0.5)
+
+    glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
+
+    # black section
+    # TODO: texture parameter?
+
+    # black cylinder liner
+    draw_hole_insides(math.pi / 2, 3 * math.pi / 2, math.pi / 16, 1) # inner
+    draw_hole_insides(3 * math.pi / 2, 5 * math.pi / 2, math.pi / 16, 1.5) # outer
 
     glPopMatrix()
 
 # TODO: implement
-def draw_billiard_ball(x, y, z, texture):
-    pass
+def draw_billiard_ball(x, y, z, texture, x_rotation=-90, z_rotation=0):
+    glPushMatrix()
+
+    set_ball_material(GL_FRONT_AND_BACK)
+    glBindTexture(GL_TEXTURE_2D, texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) 
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    glEnable(GL_TEXTURE_2D)
+
+    glTranslatef(x, y, z)
+    glRotate(x_rotation, 1, 0, 0)
+    glRotate(z_rotation, 0, 0, 1)
+    gluSphere(ball, 0.25, 16, 16)
+
+    glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
 
 # TODO: implement
 def draw_cue_ball(x, y, z):
     glPushMatrix()
+
+    set_cue_ball_material(GL_FRONT_AND_BACK)
+    glBindTexture(GL_TEXTURE_2D, cue_ball_texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) 
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+
     glTranslatef(x, y, z)
     gluSphere(ball, 0.25, 16, 16)
+
+    glDisable(GL_TEXTURE_2D)
+
     glPopMatrix()
 
 # TODO: implement swinging
@@ -1830,6 +1927,20 @@ def set_wood_support_material(face):
 # helper method to set the material properties for the painting on the wall
 # TODO: update to be different from felt
 def set_painting_material(face):
+    glMaterialfv(face, GL_AMBIENT, [0.5, 0.5, 0.5, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(face, GL_SHININESS, 10.0)
+
+# helper method to set the material properties for the cue ball
+def set_cue_ball_material(face):
+    glMaterialfv(face, GL_AMBIENT, [1, 1, 1, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [1, 1, 1, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [1, 1, 1, 1.0])
+    glMaterialf(face, GL_SHININESS, 10.0)
+
+# helper method to set the material properties for the other balls
+def set_ball_material(face):
     glMaterialfv(face, GL_AMBIENT, [0.5, 0.5, 0.5, 1.0])
     glMaterialfv(face, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
     glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
