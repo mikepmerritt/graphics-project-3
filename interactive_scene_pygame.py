@@ -53,6 +53,7 @@ dice_texture_3 = None
 dice_texture_4 = None
 dice_texture_5 = None
 dice_texture_6 = None
+library_painting_texture = None
 
 # Dice state information
 dice_animating = False
@@ -207,7 +208,7 @@ def init():
     # quadrics
     global tube, ball, disk
     # textures
-    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, ceiling_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture
+    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, ceiling_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture, library_painting_texture
 
     # pygame setup
     pygame.init()
@@ -232,6 +233,7 @@ def init():
     dice_texture_4 = load_texture("dice_4.jpg", 512)
     dice_texture_5 = load_texture("dice_5.jpg", 512)
     dice_texture_6 = load_texture("dice_6.jpg", 512)
+    library_painting_texture = load_texture("library_painting.jpg", 2048)
     floor_texture = generate_checkerboard_texture(4, 4, 1, [[139, 69, 19, 255], [205, 133, 63, 255]]) 
 
     # loading / creating quadrics
@@ -259,6 +261,7 @@ def init():
 #   in order to preserve repeating patterns, the image is resized instead of cropped
 def load_texture(file_name, dim):
     im = Image.open(file_name)
+    im = im.transpose(method=Image.Transpose.FLIP_TOP_BOTTOM)
     size = (dim, dim)
     texture = im.resize(size).tobytes("raw")
 
@@ -604,6 +607,7 @@ def draw_objects():
     draw_pool_table(0, 4, 0)
     # ball bounds are x: [-7.25, 7.25] z: [-2.75, 2.75]
     draw_cue_ball(0, 9.25, 0) 
+    draw_wall_picture(0, 20, -39.5, 15, 15)
     glPopMatrix()
     
 #=======================================
@@ -1625,9 +1629,38 @@ def draw_hanging_spotlight(x, y, z):
 
     glPopMatrix()
 
-# TODO: implement
-def draw_wall_picture(x, y, z):
-    pass
+# TODO: implement disabling
+# draws a painting on the xy-plane based on the lighting
+def draw_wall_picture(x, y, z, width, height):
+    glPushMatrix()
+    glTranslatef(x - (width / 2), (y - height / 2), z)
+    set_painting_material(GL_FRONT)
+
+    painting_visible = True
+    for index, light in enumerate(lights):
+        if index == 0:
+            continue
+        elif index == 4 and hanging_light_switched_on:
+            painting_visible = False
+        elif light.enabled:
+            painting_visible = False       
+    
+    if (painting_visible):
+        draw_textured_plane(width, height, 10, 10, library_painting_texture)
+    else:
+        draw_textured_plane(width, height, 10, 10, ceiling_texture)
+
+    glPopMatrix()
+
+# draws a trapezoidal prism, used for the painting frame
+# the trapezoid shape is essentially a rectangular prism with a 30 degree
+#   angle up on the inside portion
+def draw_trapezoidal_prism(x, y, z, x_size, y_size, z_size, x_slices, y_slices, z_slices):
+    # move to cube location
+    glPushMatrix()
+    glTranslate(x, y, z)
+
+    glPopMatrix()
 
 # TODO: implement
 def print_help_message():
@@ -1700,6 +1733,14 @@ def set_felt_material(face):
 # helper method to set the material properties for the table supports
 def set_wood_support_material(face):
     pass # TODO: find and implement
+
+# helper method to set the material properties for the painting on the wall
+# TODO: update to be different from felt
+def set_painting_material(face):
+    glMaterialfv(face, GL_AMBIENT, [0.5, 0.5, 0.5, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(face, GL_SHININESS, 10.0)
 
 #=======================================
 # Direct OpenGL Matrix Operation Examples
