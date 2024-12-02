@@ -19,6 +19,67 @@ from light import *
 from PIL import Image
 import random
 
+class BilliardBall:
+    def __init__(self, id, x, z):
+        # identifier
+        self.id = id # 0 for cue
+
+        # position and state
+        self.x = x
+        self.z = z
+        self.sunk = False
+
+        # movement info
+        self.force_magnitude = 0
+        self.force_direction = Vector(Point(0, 0, 0))
+        # if id == 0:
+        #     self.force_magnitude = 4
+        #     self.force_direction = Vector(Point(3, 0, -1))
+        #     self.force_direction.normalize()
+
+        # "try" positions - where the ball wants to go, used in advance
+        self.tx = x
+        self.tz = z
+    
+    def predict(self):
+        # attempt to do any potential movement
+        self.tx = self.x + (self.force_direction.dx * self.force_magnitude / DELAY)
+        self.tz = self.z + (self.force_direction.dz * self.force_magnitude / DELAY)
+
+        self.bounds_check()
+
+    def bounds_check(self, tolerance=0.25):
+        # bounds check with walls and holes
+        if self.tx < ball_min_x:
+            self.tx = (2 * ball_min_x) - self.tx
+            self.force_direction.dx = -self.force_direction.dx
+        elif self.tx > ball_max_x:
+            self.tx = (2 * ball_max_x) - self.tx
+            self.force_direction.dx = -self.force_direction.dx
+        if self.tz < ball_min_z:
+            self.tz = (2 * ball_min_z) - self.tz
+            self.force_direction.dz = -self.force_direction.dz
+        elif self.tz > ball_max_z:
+            self.tz = (2 * ball_max_z) - self.tz
+            self.force_direction.dz = -self.force_direction.dz
+
+
+    def advance(self, force_loss_over_time=0.01):
+        self.x = self.tx
+        self.z = self.tz
+
+        # slow down after movement
+        self.force_magnitude -= force_loss_over_time
+        self.force_magnitude = max(self.force_magnitude, 0)
+
+    def compare(self, other, tolerance=0.25):
+        # bounds check with other ball (tolerance = radius)
+        if math.abs(self.tx - other.tx) <= tolerance and math.abs(self.tz - other.tz) <= tolerance:
+            # redirect both and recalc t
+            return True
+        else:
+            return False
+
 #=======================================
 # Initial data configuration + Global module variables
 #=======================================
@@ -65,6 +126,16 @@ library_painting_texture = None
 dice_animating = False
 dice_rotation = [0, 0, 0] 
 dice_rotation2 = [0, 0, 0]
+
+# Billiards state information
+table_x = 0
+table_z = 0
+# ball bounds are x: [-7.25, 7.25] z: [-2.75, 2.75]
+ball_min_x = table_x - 7.25
+ball_max_x = table_x + 7.25
+ball_min_z = table_z - 2.75
+ball_max_z = table_z + 2.75
+all_balls = []
 
 # Hanging light state information
 hanging_light_switched_on = False
@@ -270,6 +341,8 @@ def init():
     glEnable(GL_NORMALIZE)    # Inefficient...
     glEnable(GL_DEPTH_TEST)   # For z-buffering!
 
+    reset_balls()
+
 # helper function to load in textures with a given file and image size
 #   in order to preserve repeating patterns, the image is resized instead of cropped
 def load_texture(file_name, dim):
@@ -373,6 +446,18 @@ def advance():
             dice_animating = False
             dice_rotation = [random.randint(0,3) * 90, random.randint(0,3) * 90, random.randint(0,3) * 90]
             dice_rotation2 = [random.randint(0,3) * 90, random.randint(0,3) * 90, random.randint(0,3) * 90]
+
+    # Billiards behaviors
+    for ball in all_balls:
+        if not ball.sunk:
+            ball.predict()
+        
+        # TODO: interball collisions
+
+    # precondition: all non-sunk balls predicted successfully
+    for ball in all_balls:
+        if not ball.sunk:
+            ball.advance()
 
     # Hanging light animations
     global hanging_light_switched_on, flickering, flicker_duration, flicker_elapsed_frames, reflickering, reflicker_duration, reflicker_elapsed_frames
@@ -626,14 +711,8 @@ def draw_objects():
     draw_desk_lamp(-32, 8, -36)
     draw_dice(-37, 8.22, -34)
     draw_hanging_spotlight(0, 40, 0)
-    draw_pool_table(0, 4, 0)
-    # ball bounds are x: [-7.25, 7.25] z: [-2.75, 2.75]
-    draw_cue_ball(0, 9.25, 0) 
-    draw_billiard_ball(2, 9.25, 0, one_ball_texture)
-    draw_billiard_ball(2.5, 9.25, 0.5, three_ball_texture)
-    draw_billiard_ball(2.5, 9.25, -0.5, eight_ball_texture)
-    draw_billiard_ball(3, 9.25, 1, ten_ball_texture)
-    draw_billiard_ball(3, 9.25, -1, fourteen_ball_texture)
+    draw_pool_table(table_x, 4, table_z)
+    draw_balls()
     draw_wall_painting(0, 20, -39.5, 15, 15)
     glPopMatrix()
     
@@ -1633,9 +1712,21 @@ def draw_middle_hole(x, y, z):
 
     glPopMatrix()
 
-# TODO: implement
-def draw_billiard_ball(x, y, z, texture, x_rotation=-90, z_rotation=0):
+def draw_billiard_ball(x, y, z, id, x_rotation=-90, z_rotation=0):
     glPushMatrix()
+
+    texture = cue_ball_texture # temp, should not run
+
+    if id == 1:
+        texture = one_ball_texture
+    elif id == 3:
+        texture = three_ball_texture
+    elif id == 8:
+        texture = eight_ball_texture
+    elif id == 10:
+        texture = ten_ball_texture
+    else:
+        texture = fourteen_ball_texture
 
     set_ball_material(GL_FRONT_AND_BACK)
     glBindTexture(GL_TEXTURE_2D, texture)
@@ -1679,6 +1770,30 @@ def draw_cue_ball(x, y, z):
     glDisable(GL_TEXTURE_2D)
 
     glPopMatrix()
+
+def reset_balls():
+    global all_balls
+    all_balls = []
+    all_balls.append(BilliardBall(0, 0, 0))         # cue
+    all_balls.append(BilliardBall(8, 2, 0))         # eight
+    all_balls.append(BilliardBall(1, 2.5, 0.5))     # one
+    all_balls.append(BilliardBall(3, 2.5, -0.5))    # three
+    all_balls.append(BilliardBall(10, 3, 1))        # ten
+    all_balls.append(BilliardBall(14, 3, -1))       # fourteen
+
+def draw_balls():
+    for ball in all_balls:
+        if ball.id == 0:
+            if not ball.sunk:
+                draw_cue_ball(ball.x, 9.25, ball.z)
+            else:
+                # TODO: check if all other balls stationary
+                ball.x = 0
+                ball.z = 0
+                ball.force = 0
+        else:
+            if not ball.sunk:
+                draw_billiard_ball(ball.x, 9.25, ball.z, ball.id) # TODO: rotation
 
 # TODO: implement swinging
 def draw_hanging_spotlight(x, y, z):
