@@ -233,7 +233,9 @@ lamp_support_texture = None
 lamp_head_texture = None
 aluminum_light_texture = None
 aluminum_dark_texture = None
+pool_wood_texture = None
 felt_texture = None
+pocket_texture = None
 dice_texture_1 = None
 dice_texture_2 = None
 dice_texture_3 = None
@@ -419,7 +421,7 @@ def init():
     # quadrics
     global tube, ball, disk
     # textures
-    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, ceiling_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture, cue_ball_texture, one_ball_texture, three_ball_texture, eight_ball_texture, ten_ball_texture, fourteen_ball_texture, library_painting_texture
+    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, ceiling_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, pool_wood_texture, felt_texture, pocket_texture, cue_ball_texture, one_ball_texture, three_ball_texture, eight_ball_texture, ten_ball_texture, fourteen_ball_texture, library_painting_texture
 
     # pygame setup
     pygame.init()
@@ -437,7 +439,9 @@ def init():
     lamp_head_texture = load_texture("lamp_head.jpg", 512)
     aluminum_dark_texture = load_texture("HangingLamp_Dark.jpg", 1024)
     aluminum_light_texture = load_texture("HangingLamp_Light.jpg", 1024)
-    felt_texture = load_texture("felt-temp.jpg", 512)
+    pool_wood_texture = load_texture("pool_wood.jpg", 1024)
+    felt_texture = load_texture("felt.jpg", 1024)
+    pocket_texture = load_texture("pocket.jpg", 512)
     dice_texture_1 = load_texture("dice_1.jpg", 512)
     dice_texture_2 = load_texture("dice_2.jpg", 512)
     dice_texture_3 = load_texture("dice_3.jpg", 512)
@@ -1308,11 +1312,11 @@ def draw_pool_table(x, y, z):
     glPopMatrix()
 
     # x-aligned wood segments (5 x 1.5 x 1.5)
-    set_wood_support_material(GL_FRONT)
-    draw_rect(x - 4, y + 4.75, z - 4.25, 5, 1.5, 1.5, 10, 4, 3, table_support_texture, False)
-    draw_rect(x + 4, y + 4.75, z - 4.25, 5, 1.5, 1.5, 10, 4, 3, table_support_texture, False)
-    draw_rect(x - 4, y + 4.75, z + 4.25, 5, 1.5, 1.5, 10, 4, 3, table_support_texture, False)
-    draw_rect(x + 4, y + 4.75, z + 4.25, 5, 1.5, 1.5, 10, 4, 3, table_support_texture, False)
+    set_pool_wood_material(GL_FRONT)
+    draw_rect(x - 4, y + 4.75, z - 4.25, 5, 1.5, 1.5, 10, 4, 3, pool_wood_texture, False)
+    draw_rect(x + 4, y + 4.75, z - 4.25, 5, 1.5, 1.5, 10, 4, 3, pool_wood_texture, False)
+    draw_rect(x - 4, y + 4.75, z + 4.25, 5, 1.5, 1.5, 10, 4, 3, pool_wood_texture, False)
+    draw_rect(x + 4, y + 4.75, z + 4.25, 5, 1.5, 1.5, 10, 4, 3, pool_wood_texture, False)
 
     # x-aligned felt segments (5 x 1.5 x 0.5)
     set_felt_material(GL_FRONT)
@@ -1322,9 +1326,9 @@ def draw_pool_table(x, y, z):
     draw_rect(x + 4, y + 4.75, z + 3.25, 5, 1.5, 0.5, 10, 4, 1, felt_texture, False)
 
     # z-aligned wood segments (1.5 x 1.5 x 4)
-    set_wood_support_material(GL_FRONT)
-    draw_rect(x - 8.75, y + 4.75, z, 1.5, 1.5, 4, 3, 4, 8, table_support_texture, False)
-    draw_rect(x + 8.75, y + 4.75, z, 1.5, 1.5, 4, 3, 4, 8, table_support_texture, False)
+    set_pool_wood_material(GL_FRONT)
+    draw_rect(x - 8.75, y + 4.75, z, 1.5, 1.5, 4, 3, 4, 8, pool_wood_texture, False)
+    draw_rect(x + 8.75, y + 4.75, z, 1.5, 1.5, 4, 3, 4, 8, pool_wood_texture, False)
 
     # z-aligned felt segments (0.5 x 1.5 x 4)
     set_felt_material(GL_FRONT)
@@ -1340,19 +1344,19 @@ def draw_pool_table(x, y, z):
     draw_rect(x - 4, y + 4.5, z + 2.5, 5, 1, 1, 10, 1, 2, felt_texture, False)
     draw_rect(x + 4, y + 4.5, z + 2.5, 5, 1, 1, 10, 1, 2, felt_texture, False)
 
-    draw_rect(x - 7, y + 4.5, z, 1, 1, 4, 1, 1, 4, felt_texture, False)
-    draw_rect(x + 7, y + 4.5, z, 1, 1, 4, 1, 1, 4, felt_texture, False)
+    draw_rect(x - 7, y + 4.5, z, 1, 1, 4, 2, 2, 8, felt_texture, False)
+    draw_rect(x + 7, y + 4.5, z, 1, 1, 4, 2, 2, 8, felt_texture, False)
 
     # wood bottom middle (19 x 1 x 10)
-    set_wood_support_material(GL_FRONT)
-    draw_rect(x, y + 3.5, z, 19, 1, 10, 19, 1, 10, table_support_texture, False)
+    set_pool_wood_material(GL_FRONT)
+    draw_rect(x, y + 3.5, z, 19, 1, 10, 38, 2, 20, pool_wood_texture, False)
 
     # wood legs (3 x 7 x 3)
-    set_wood_support_material(GL_FRONT)
-    draw_rect(x - 6, y - 0.5, z - 2.5, 3, 7, 3, 3, 7, 3, table_support_texture, False)
-    draw_rect(x + 6, y - 0.5, z - 2.5, 3, 7, 3, 3, 7, 3, table_support_texture, False)
-    draw_rect(x - 6, y - 0.5, z + 2.5, 3, 7, 3, 3, 7, 3, table_support_texture, False)
-    draw_rect(x + 6, y - 0.5, z + 2.5, 3, 7, 3, 3, 7, 3, table_support_texture, False)
+    set_pool_wood_material(GL_FRONT)
+    draw_rect(x - 6, y - 0.5, z - 2.5, 3, 7, 3, 6, 14, 6, pool_wood_texture, False)
+    draw_rect(x + 6, y - 0.5, z - 2.5, 3, 7, 3, 6, 14, 6, pool_wood_texture, False)
+    draw_rect(x - 6, y - 0.5, z + 2.5, 3, 7, 3, 6, 14, 6, pool_wood_texture, False)
+    draw_rect(x + 6, y - 0.5, z + 2.5, 3, 7, 3, 6, 14, 6, pool_wood_texture, False)
 
 def draw_textured_plane(x_size, y_size, x_slices, y_slices, texture, stretch=True):
     """ Draw a textured plane of the specified dimensions on the xy-plane.
@@ -1459,6 +1463,15 @@ def draw_rect(x, y, z, x_size, y_size, z_size, x_slices, y_slices, z_slices, tex
 def draw_hole_insides(start_angle, end_angle, turn_amount, height):
     glPushMatrix()
 
+    set_pocket_material(GL_FRONT_AND_BACK)
+    glBindTexture(GL_TEXTURE_2D, pocket_texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)           # try GL_NICEST/GL_FASTEST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
     # TODO: texture configuration, for if a different one is used
 
     dtheta = turn_amount
@@ -1485,6 +1498,12 @@ def draw_hole_insides(start_angle, end_angle, turn_amount, height):
         glPopMatrix()
 
         prev = (vx, vz)
+
+    glPushMatrix()
+    glTranslatef(-1.25, -0.5, -1.25)
+    glRotatef(90, 1, 0, 0)
+    draw_textured_plane(2.5, 2.5, 5, 5, pocket_texture, False)
+    glPopMatrix()
 
     glPopMatrix()
 
@@ -1540,8 +1559,8 @@ def draw_corner(x, y, z):
     glTranslate(x, y, z) 
 
     # wood section
-    set_wood_support_material(GL_FRONT)
-    glBindTexture(GL_TEXTURE_2D, table_support_texture)
+    set_pool_wood_material(GL_FRONT_AND_BACK)
+    glBindTexture(GL_TEXTURE_2D, pool_wood_texture)
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
@@ -1554,14 +1573,14 @@ def draw_corner(x, y, z):
     # back
     glPushMatrix()
     glTranslate(-1.5, -0.75, 1.5)
-    draw_textured_plane(3, 1.5, 6, 4, table_support_texture, False)
+    draw_textured_plane(3, 1.5, 6, 4, pool_wood_texture, False)
     glPopMatrix()
 
     # side
     glPushMatrix()
     glTranslate(-1.5, -0.75, -1.5)
     glRotatef(-90, 0, 1, 0)
-    draw_textured_plane(3, 1.5, 6, 4, table_support_texture, False)
+    draw_textured_plane(3, 1.5, 6, 4, pool_wood_texture, False)
     glPopMatrix()
 
     # wood corner top
@@ -1702,7 +1721,6 @@ def draw_corner(x, y, z):
     glPopMatrix()
 
     # black section
-    # TODO: texture parameter?
 
     # black cylinder liner
     draw_hole_insides(math.pi, 5 * math.pi / 2, math.pi / 16, 1.5) # outer
@@ -1716,8 +1734,8 @@ def draw_middle_hole(x, y, z):
     glTranslatef(x, y, z)
 
     # wood section
-    set_wood_support_material(GL_FRONT)
-    glBindTexture(GL_TEXTURE_2D, table_support_texture)
+    set_pool_wood_material(GL_FRONT_AND_BACK)
+    glBindTexture(GL_TEXTURE_2D, pool_wood_texture)
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
@@ -1738,7 +1756,7 @@ def draw_middle_hole(x, y, z):
     # wooden back panel
     glPushMatrix()
     glTranslate(-1.5, -0.75, 1.5)
-    draw_textured_plane(3, 1.5, 6, 4, table_support_texture, False)
+    draw_textured_plane(3, 1.5, 6, 4, pool_wood_texture, False)
     glPopMatrix()
 
     # felt section
@@ -1871,7 +1889,6 @@ def draw_middle_hole(x, y, z):
     glPopMatrix()
 
     # black section
-    # TODO: texture parameter?
 
     # black cylinder liner
     draw_hole_insides(math.pi / 2, 3 * math.pi / 2, math.pi / 16, 1) # inner
@@ -2191,13 +2208,27 @@ def set_ceiling_material(face):
     glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
     glMaterialf(face, GL_SHININESS, 10.0)
 
+
+# helper method to set the material properties for the table supports
+def set_pool_wood_material(face):
+    glMaterialfv(face, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(face, GL_SHININESS, 10.0)
+
 # helper method to set the material properties for the felt
-# TODO: double check values
 def set_felt_material(face):
     glMaterialfv(face, GL_AMBIENT, [0.5, 0.5, 0.5, 1.0])
     glMaterialfv(face, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
     glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
     glMaterialf(face, GL_SHININESS, 10.0)
+
+# helper method to set the material properties for the felt
+def set_pocket_material(face):
+    glMaterialfv(face, GL_AMBIENT, [0.1, 0.1, 0.1, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [0.1, 0.1, 0.1, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(face, GL_SHININESS, 1.0)
 
 # helper method to set the material properties for the table supports
 def set_wood_support_material(face):
