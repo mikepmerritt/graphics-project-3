@@ -34,17 +34,17 @@ class BilliardBall:
         self.force_direction = Vector(Point(0, 0, 0))
         if id == 0:
             self.force_magnitude = 4
-            self.force_direction = Vector(Point(3, 0, -1))
+            self.force_direction = Vector(Point(1, 0, 0))
             self.force_direction.normalize()
 
         # "try" positions - where the ball wants to go, used in advance
         self.tx = x
         self.tz = z
     
-    def predict(self):
+    def predict(self, time=0):
         # attempt to do any potential movement
-        self.tx = self.x + (self.force_direction.dx * self.force_magnitude / DELAY)
-        self.tz = self.z + (self.force_direction.dz * self.force_magnitude / DELAY)
+        self.tx = self.x + (self.force_direction.dx * self.force_magnitude / (DELAY - time))
+        self.tz = self.z + (self.force_direction.dz * self.force_magnitude / (DELAY - time))
 
         self.bounds_check()
 
@@ -63,22 +63,29 @@ class BilliardBall:
             self.tz = (2 * ball_max_z) - self.tz
             self.force_direction.dz = -self.force_direction.dz
 
-
-    def advance(self, force_loss_over_time=0.01):
+    def advance(self):
         self.x = self.tx
         self.z = self.tz
 
         # slow down after movement
         self.force_magnitude -= force_loss_over_time
         self.force_magnitude = max(self.force_magnitude, 0)
-
+    
     def compare(self, other, tolerance=0.25):
         # bounds check with other ball (tolerance = radius)
         if abs(self.tx - other.tx) <= tolerance and abs(self.tz - other.tz) <= tolerance:
             # redirect both
+
+            # all of this occurs over the course of one "DELAY"
+
+            # split into precollision (part 1), collision (part 2, but doesnt take any time), and postcollision (part 3)
+
             # part 1: move up until the collision
-            # calculate the collision centers
-            # TODO: probably need to calculate rather than estimate with t
+            # in other words, calculate the collision centers
+
+            # this requires us to find the precise time of collision
+            collision_time = self.find_collision_time(other) # see the function below
+
             # x1
             center = Point(self.tx, 0, self.tz)
             # x2
@@ -90,7 +97,7 @@ class BilliardBall:
             # <x1 - x2>; p = x1, q = x2, q - p
             center_diff_vector = Vector(other_center, center)       
             # <x2 - x1>; p = x2, q = x1, q - p                                    
-            other_center_diff_vector = Vector(other_center, center)
+            other_center_diff_vector = Vector(center, other_center)
 
             # <v1>
             old_velocity = self.force_direction.scalar_mult(self.force_magnitude)
@@ -109,9 +116,9 @@ class BilliardBall:
             other_velocity_diff.dz = other_old_velocity.dz - old_velocity.dz
 
             # dot(<v1 - v2>, <x1 - x2>) / ||<x1 - x2>||^2
-            scalar = velocity_diff.dot(center_diff_vector) / center_diff_vector.magnitude() ** 2
+            scalar = velocity_diff.dot(center_diff_vector) / (center_diff_vector.magnitude() ** 2)
             # dot(<v2 - v1>, <x2 - x1>) / ||<x2 - x1>||^2
-            other_scalar = velocity_diff.dot(center_diff_vector) / other_center_diff_vector.magnitude() ** 2
+            other_scalar = velocity_diff.dot(center_diff_vector) / (other_center_diff_vector.magnitude() ** 2)
 
             # apply scalars from above
             scaled_part = center_diff_vector.scalar_mult(scalar)
@@ -136,7 +143,68 @@ class BilliardBall:
             other.force_direction = other_new_velocity
 
             # part 3: move the rest
-            # TODO: necessary?
+            self.predict(collision_time)
+            other.predict(collision_time)
+            
+    def find_collision_time(self, other):
+        # BEGIN REF
+        # logic based on https://stackoverflow.com/questions/43577298/calculating-collision-times-between-two-circles-physics
+
+        # goal is to find collision time using quadratic formula, since we get a quadratic equation
+        # following along with the post at https://stackoverflow.com/a/43577790:
+
+        # we can derive the quadratic equation using my variables like so:
+
+        # position_x = 
+        #         (1 / 2 * self.force_direction.dx * force_loss_over_time * time ** 2) 
+        #         + (self.force_direction.dx * self.force_magnitude * time) 
+        #         + (self.x)
+
+        # position_z = 
+        #         (1 / 2 * self.force_direction.dz * force_loss_over_time * time ** 2) 
+        #         + (self.force_direction.dz * self.force_magnitude * time) 
+        #         + (self.z)
+
+        # other_position_x = 
+        #         (1 / 2 * other.force_direction.dx * force_loss_over_time * time ** 2) 
+        #         + (other.force_direction.dx * other.force_magnitude * time) 
+        #         + (other.x)
+
+        # other_position_z = 
+        #         (1 / 2 * other.force_direction.dz * force_loss_over_time * time ** 2) 
+        #         + (other.force_direction.dz * other.force_magnitude * time) 
+        #         + (other.z)
+
+        # distance = math.sqrt((position_x - other_position_x) ** 2 + (position_z - other_position_z) ** 2)
+        # distance - (0.25 + 0.25) = 0   <--- this is a quadratic equation when simplified, solve for time
+
+        # then, https://stackoverflow.com/a/70245568 provides a simplification of the derivation using WolframAlpha to calculate like so:
+
+        epsilon = -0.0001
+
+        distance = (0.25 + 0.25) ** 2 # radii of two balls added together
+        a = (self.force_direction.dx * self.force_magnitude - other.force_direction.dx * other.force_magnitude) ** 2 + (self.force_direction.dz * self.force_magnitude - other.force_direction.dz * other.force_magnitude) ** 2
+        b = 2 * ((self.x - other.x) * (self.force_direction.dx * self.force_magnitude - other.force_direction.dx * other.force_magnitude) + (self.z - other.z) * (self.force_direction.dz * self.force_magnitude - other.force_direction.dz * other.force_magnitude))
+        c = (self.x - other.x) ** 2 + (self.z - other.z) ** 2 - distance
+        discriminant = b ** 2 - 4 * a * c
+
+        # ignore near misses (b > epsilon, d = 0) or imaginary solutions (d < 0)
+        if b > epsilon or discriminant <= 0:
+            return -1
+
+        # if there is a real solution, find using quadratic formula
+
+        entry_time = (-b - math.sqrt(discriminant)) / (2 * a) # collision entrance time
+        exit_time = (-b - math.sqrt(discriminant)) / (2 * a) # collision exit time
+
+        # if we are already between entry time and exit time, the collision is ongoing, so collision time is now
+        if entry_time < 0 and exit_time > 0 and b <= epsilon:
+            return 0
+
+        # else collision time is the entry time
+        return entry_time
+
+        # END REF
 
 #=======================================
 # Initial data configuration + Global module variables
@@ -193,6 +261,7 @@ ball_min_x = table_x - 7.25
 ball_max_x = table_x + 7.25
 ball_min_z = table_z - 2.75
 ball_max_z = table_z + 2.75
+force_loss_over_time = 0.01
 all_balls = []
 
 # Hanging light state information
@@ -1829,12 +1898,12 @@ def draw_cue_ball(x, y, z):
 def reset_balls():
     global all_balls
     all_balls = []
-    all_balls.append(BilliardBall(0, 0, 0))         # cue
+    all_balls.append(BilliardBall(0, -2, 0))        # cue
     all_balls.append(BilliardBall(8, 2, 0))         # eight
-    all_balls.append(BilliardBall(1, 2.5, 0.5))     # one
-    all_balls.append(BilliardBall(3, 2.5, -0.5))    # three
-    all_balls.append(BilliardBall(10, 3, 1))        # ten
-    all_balls.append(BilliardBall(14, 3, -1))       # fourteen
+    all_balls.append(BilliardBall(1, 2.4, 0.2))     # one
+    all_balls.append(BilliardBall(3, 2.4, -0.2))    # three
+    all_balls.append(BilliardBall(10, 2.8, 0.4))    # ten
+    all_balls.append(BilliardBall(14, 2.8, -0.4))   # fourteen
 
 def draw_balls():
     for ball in all_balls:
