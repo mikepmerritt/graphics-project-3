@@ -53,6 +53,12 @@ dice_texture_3 = None
 dice_texture_4 = None
 dice_texture_5 = None
 dice_texture_6 = None
+cue_ball_texture = None
+one_ball_texture = None
+three_ball_texture = None
+eight_ball_texture = None
+ten_ball_texture = None
+fourteen_ball_texture = None
 
 # Dice state information
 dice_animating = False
@@ -207,7 +213,7 @@ def init():
     # quadrics
     global tube, ball, disk
     # textures
-    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, ceiling_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture
+    global dice_texture_1, dice_texture_2, dice_texture_3, dice_texture_4, dice_texture_5, dice_texture_6, floor_texture, wall_texture, ceiling_texture, table_support_texture, table_top_texture, lamp_support_texture, lamp_head_texture, aluminum_light_texture, aluminum_dark_texture, felt_texture, cue_ball_texture, one_ball_texture, three_ball_texture, eight_ball_texture, ten_ball_texture, fourteen_ball_texture
 
     # pygame setup
     pygame.init()
@@ -232,6 +238,12 @@ def init():
     dice_texture_4 = load_texture("dice_4.jpg", 512)
     dice_texture_5 = load_texture("dice_5.jpg", 512)
     dice_texture_6 = load_texture("dice_6.jpg", 512)
+    cue_ball_texture = load_texture("cue.jpg", 512)
+    one_ball_texture = load_texture("ball1_squish.jpg", 1024)
+    three_ball_texture = load_texture("ball3_squish.jpg", 1024)
+    eight_ball_texture = load_texture("ball8_squish.jpg", 1024)
+    ten_ball_texture = load_texture("ball10_squish.jpg", 1024)
+    fourteen_ball_texture = load_texture("ball14_squish.jpg", 1024)
     floor_texture = generate_checkerboard_texture(4, 4, 1, [[139, 69, 19, 255], [205, 133, 63, 255]]) 
 
     # loading / creating quadrics
@@ -604,6 +616,11 @@ def draw_objects():
     draw_pool_table(0, 4, 0)
     # ball bounds are x: [-7.25, 7.25] z: [-2.75, 2.75]
     draw_cue_ball(0, 9.25, 0) 
+    draw_billiard_ball(2, 9.25, 0, one_ball_texture)
+    draw_billiard_ball(2.5, 9.25, 0.5, three_ball_texture)
+    draw_billiard_ball(2.5, 9.25, -0.5, eight_ball_texture)
+    draw_billiard_ball(3, 9.25, 1, ten_ball_texture)
+    draw_billiard_ball(3, 9.25, -1, fourteen_ball_texture)
     glPopMatrix()
     
 #=======================================
@@ -1603,14 +1620,50 @@ def draw_middle_hole(x, y, z):
     glPopMatrix()
 
 # TODO: implement
-def draw_billiard_ball(x, y, z, texture, x_rotation=0, z_rotation=0):
-    pass
+def draw_billiard_ball(x, y, z, texture, x_rotation=-90, z_rotation=0):
+    glPushMatrix()
+
+    set_ball_material(GL_FRONT_AND_BACK)
+    glBindTexture(GL_TEXTURE_2D, texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) 
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    glEnable(GL_TEXTURE_2D)
+
+    glTranslatef(x, y, z)
+    glRotate(x_rotation, 1, 0, 0)
+    glRotate(z_rotation, 0, 0, 1)
+    gluSphere(ball, 0.25, 16, 16)
+
+    glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
 
 # TODO: implement
-def draw_cue_ball(x, y, z, x_rotation=0, z_rotation=0):
+def draw_cue_ball(x, y, z):
     glPushMatrix()
+
+    set_cue_ball_material(GL_FRONT_AND_BACK)
+    glBindTexture(GL_TEXTURE_2D, cue_ball_texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) 
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+
     glTranslatef(x, y, z)
     gluSphere(ball, 0.25, 16, 16)
+
+    glDisable(GL_TEXTURE_2D)
+
     glPopMatrix()
 
 # TODO: implement swinging
@@ -1757,6 +1810,20 @@ def set_felt_material(face):
 # helper method to set the material properties for the table supports
 def set_wood_support_material(face):
     pass # TODO: find and implement
+
+# helper method to set the material properties for the cue ball
+def set_cue_ball_material(face):
+    glMaterialfv(face, GL_AMBIENT, [1, 1, 1, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [1, 1, 1, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [1, 1, 1, 1.0])
+    glMaterialf(face, GL_SHININESS, 10.0)
+
+# helper method to set the material properties for the other balls
+def set_ball_material(face):
+    glMaterialfv(face, GL_AMBIENT, [0.5, 0.5, 0.5, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(face, GL_SHININESS, 10.0)
 
 #=======================================
 # Direct OpenGL Matrix Operation Examples
