@@ -913,8 +913,8 @@ def draw_objects():
     draw_walls(0, 0, 0, 80, 40, 10, 5)
     draw_ceiling(0, 40, 0, 80, 80, 10, 10)
     draw_side_table(-35, 0, -34)
-    draw_desk_lamp(-32, 8, -36)
-    draw_dice(-37, 8.22, -34)
+    draw_desk_lamp(-32, 8.5, -36)
+    draw_dice(-37, 8.72, -34)
     draw_hanging_spotlight(0, 40, 0)
     draw_pool_table(table_x, 4, table_z)
     draw_balls()
@@ -985,97 +985,18 @@ def draw_ceiling(center_x, y, center_z, x_dim, z_dim, x_slices, z_slices):
     glPopMatrix()
 
 def draw_table_top(width, length):
-    thickness = 0.8 
-
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
-    glMaterialf(GL_FRONT, GL_SHININESS, 10.0)
-
-    glEnable(GL_TEXTURE_2D)
-    glBindTexture(GL_TEXTURE_2D, table_top_texture)
-    
-    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-    
-    glBegin(GL_QUADS)
-    glNormal3f(0, 1, 0)
-    glTexCoord2f(0, 0)
-    glVertex3f(-width/2, 0, -length/2)
-    glTexCoord2f(1, 0)
-    glVertex3f(width/2, 0, -length/2)
-    glTexCoord2f(1, 1)
-    glVertex3f(width/2, 0, length/2)
-    glTexCoord2f(0, 1)
-    glVertex3f(-width/2, 0, length/2)
-    
-    glNormal3f(0, -1, 0)
-    glTexCoord2f(0, 0)
-    glVertex3f(-width/2, -thickness, -length/2)
-    glTexCoord2f(1, 0)
-    glVertex3f(width/2, -thickness, -length/2)
-    glTexCoord2f(1, 1)
-    glVertex3f(width/2, -thickness, length/2)
-    glTexCoord2f(0, 1)
-    glVertex3f(-width/2, -thickness, length/2)
-    
-    glNormal3f(0, 0, 1)
-    glTexCoord2f(0, 0)
-    glVertex3f(-width/2, -thickness, length/2)
-    glTexCoord2f(1, 0)
-    glVertex3f(width/2, -thickness, length/2)
-    glTexCoord2f(1, thickness/2)
-    glVertex3f(width/2, 0, length/2)
-    glTexCoord2f(0, thickness/2)
-    glVertex3f(-width/2, 0, length/2)
-    
-    glNormal3f(0, 0, -1)
-    glTexCoord2f(0, 0)
-    glVertex3f(-width/2, -thickness, -length/2)
-    glTexCoord2f(1, 0)
-    glVertex3f(width/2, -thickness, -length/2)
-    glTexCoord2f(1, thickness/2)
-    glVertex3f(width/2, 0, -length/2)
-    glTexCoord2f(0, thickness/2)
-    glVertex3f(-width/2, 0, -length/2)
-    
-    glNormal3f(-1, 0, 0)
-    glTexCoord2f(0, 0)
-    glVertex3f(-width/2, -thickness, -length/2)
-    glTexCoord2f(1, 0)
-    glVertex3f(-width/2, -thickness, length/2)
-    glTexCoord2f(1, thickness/2)
-    glVertex3f(-width/2, 0, length/2)
-    glTexCoord2f(0, thickness/2)
-    glVertex3f(-width/2, 0, -length/2)
-    
-    glNormal3f(1, 0, 0)
-    glTexCoord2f(0, 0)
-    glVertex3f(width/2, -thickness, -length/2)
-    glTexCoord2f(1, 0)
-    glVertex3f(width/2, -thickness, length/2)
-    glTexCoord2f(1, thickness/2)
-    glVertex3f(width/2, 0, length/2)
-    glTexCoord2f(0, thickness/2)
-    glVertex3f(width/2, 0, -length/2)
-    glEnd()
-    
-    glDisable(GL_TEXTURE_2D)
+    thickness = 1
+    set_wood_support_material(GL_FRONT)
+    draw_rect(0, 0, 0, width, thickness, length, 5, 2, 5, table_top_texture, stretch=True)
 
 def draw_table_leg(height):
     glPushMatrix()
     
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
-    glMaterialf(GL_FRONT, GL_SHININESS, 10.0)
+    set_wood_support_material(GL_FRONT)
 
     glEnable(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, table_support_texture)
-    
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
@@ -1125,27 +1046,26 @@ def draw_side_table(x, y, z):
 def draw_lamp_base(radius):
     glPushMatrix()
     
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
-    glMaterialf(GL_FRONT, GL_SHININESS, 10.0)
+    set_desk_lamp_material(GL_FRONT)
     
-    glEnable(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, lamp_support_texture)
-    
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
     
+    glEnable(GL_TEXTURE_2D)
+
     glRotatef(-90, 1, 0, 0)
     base_height = 0.1 
-    gluQuadricTexture(tube, GL_TRUE)
     gluCylinder(tube, radius, radius, base_height, 32, 1)
-    gluDisk(disk, 0, radius, 32, 1)  
+    glRotatef(180, 1, 0, 0)
+    gluDisk(disk, 0, radius, 32, 2)  
+    glRotatef(-180, 1, 0, 0)
     glTranslatef(0, 0, base_height)
-    gluDisk(disk, 0, radius, 32, 1)
+    gluDisk(disk, 0, radius, 32, 2)
     
     glDisable(GL_TEXTURE_2D)
     glPopMatrix()
@@ -1153,23 +1073,20 @@ def draw_lamp_base(radius):
 def draw_lamp_pole(height, radius):
     glPushMatrix()
     
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
-    glMaterialf(GL_FRONT, GL_SHININESS, 10.0)
+    set_desk_lamp_material(GL_FRONT)
 
-    glEnable(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, lamp_support_texture)
-    
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
     
+    glEnable(GL_TEXTURE_2D)
+
     glRotatef(-90, 1, 0, 0)
-    gluQuadricTexture(tube, GL_TRUE)
-    gluCylinder(tube, radius, radius, height, 16, 1)
+    gluCylinder(tube, radius, radius, height, 16, 2)
     
     glDisable(GL_TEXTURE_2D)
     glPopMatrix()
@@ -1177,26 +1094,24 @@ def draw_lamp_pole(height, radius):
 def draw_lamp_head(radius, height):
     glPushMatrix()
     
-    glMaterialfv(GL_FRONT, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
-    glMaterialfv(GL_FRONT, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
-    glMaterialfv(GL_FRONT, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
-    glMaterialf(GL_FRONT, GL_SHININESS, 10.0)
-
-    glEnable(GL_TEXTURE_2D)
-    glBindTexture(GL_TEXTURE_2D, lamp_head_texture)
+    set_desk_lamp_material(GL_FRONT)
     
+    glBindTexture(GL_TEXTURE_2D, lamp_head_texture)
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
     
+    glEnable(GL_TEXTURE_2D)
+
     glRotatef(90, 1, 0, 0)
-    gluQuadricTexture(tube, GL_TRUE)
-    gluCylinder(tube, radius, radius, height, 32, 1)
-    gluDisk(disk, 0, radius, 32, 1)
+    gluCylinder(tube, radius, radius, height, 32, 2)
+    glRotatef(180, 1, 0, 0)
+    gluDisk(disk, 0, radius, 32, 2)
+    glRotatef(-180, 1, 0, 0)
     glTranslatef(0, 0, height)
-    gluDisk(disk, 0, radius, 32, 1)
     
     glDisable(GL_TEXTURE_2D)
     glPopMatrix()
@@ -1235,6 +1150,7 @@ def draw_single_dice(x, y, z, size, rotations=[0,0,0]):
     
     def set_texture_params():
         glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE)
+        glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
@@ -2011,7 +1927,6 @@ def draw_balls():
             if not ball.sunk:
                 draw_billiard_ball(ball.x, 9.25, ball.z, ball.id) # TODO: rotation
 
-# TODO: implement swinging
 def draw_hanging_spotlight(x, y, z):
     # may need additional parameters for swinging
     glPushMatrix()
@@ -2287,6 +2202,13 @@ def set_pocket_material(face):
     glMaterialfv(face, GL_DIFFUSE, [0.1, 0.1, 0.1, 1.0])
     glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
     glMaterialf(face, GL_SHININESS, 1.0)
+
+# helper method to set the material properties for the desk lamp
+def set_desk_lamp_material(face):
+    glMaterialfv(face, GL_AMBIENT, [0.2, 0.2, 0.2, 1.0])
+    glMaterialfv(face, GL_DIFFUSE, [0.8, 0.8, 0.8, 1.0])
+    glMaterialfv(face, GL_SPECULAR, [0.1, 0.1, 0.1, 1.0])
+    glMaterialf(face, GL_SHININESS, 10.0)
 
 # helper method to set the material properties for the table supports
 def set_wood_support_material(face):
