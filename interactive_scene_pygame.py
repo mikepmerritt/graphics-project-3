@@ -1020,54 +1020,61 @@ def draw_pool_table(x, y, z):
     draw_corner(-3.5, 4.75, 8)
     glPopMatrix()
 
-    glPopMatrix()
-
     # middles (3 x 2 x 3) # floor should be at midpoint level, hole extends down
+
+    draw_middle_hole(0, 4.75, -3.5)
+    draw_middle_hole(0, 4.75, 3.5)
+
+    glPopMatrix()
 
     # x-aligned wood segments (5 x 1.5 x 1)
     set_wood_support_material(GL_FRONT)
-    draw_rect(x - 4, y + 4.75, z - 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
-    draw_rect(x + 4, y + 4.75, z - 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
-    draw_rect(x - 4, y + 4.75, z + 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
-    draw_rect(x + 4, y + 4.75, z + 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture)
+    draw_rect(x - 4, y + 4.75, z - 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture, False)
+    draw_rect(x + 4, y + 4.75, z - 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture, False)
+    draw_rect(x - 4, y + 4.75, z + 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture, False)
+    draw_rect(x + 4, y + 4.75, z + 4.5, 5, 1.5, 1, 10, 4, 2, table_support_texture, False)
 
     # x-aligned felt segments (5 x 1.5 x 1)
     set_felt_material(GL_FRONT)
-    draw_rect(x - 4, y + 4.75, z - 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
-    draw_rect(x + 4, y + 4.75, z - 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
-    draw_rect(x - 4, y + 4.75, z + 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
-    draw_rect(x + 4, y + 4.75, z + 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture)
+    draw_rect(x - 4, y + 4.75, z - 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture, False)
+    draw_rect(x + 4, y + 4.75, z - 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture, False)
+    draw_rect(x - 4, y + 4.75, z + 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture, False)
+    draw_rect(x + 4, y + 4.75, z + 3.5, 5, 1.5, 1, 10, 4, 2, felt_texture, False)
 
     # z-aligned wood segments (1 x 1.5 x 4)
     set_wood_support_material(GL_FRONT)
-    draw_rect(x - 9, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, table_support_texture)
-    draw_rect(x + 9, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, table_support_texture)
+    draw_rect(x - 9, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, table_support_texture, False)
+    draw_rect(x + 9, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, table_support_texture, False)
 
     # z-aligned felt segments (1 x 1.5 x 4)
     set_felt_material(GL_FRONT)
-    draw_rect(x - 8, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, felt_texture)
-    draw_rect(x + 8, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, felt_texture)
+    draw_rect(x - 8, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, felt_texture, False)
+    draw_rect(x + 8, y + 4.75, z, 1, 1.5, 4, 2, 4, 8, felt_texture, False)
 
     # felt play area (15 x 1 x 6) minus corners
     set_felt_material(GL_FRONT)
-    draw_rect(x, y + 4.5, z, 13, 1, 4, 13, 1, 4, felt_texture)
-    draw_rect(x, y + 4.5, z - 2.5, 13, 1, 1, 13, 1, 1, felt_texture)
-    draw_rect(x, y + 4.5, z + 2.5, 13, 1, 1, 13, 1, 1, felt_texture)
-    draw_rect(x - 7, y + 4.5, z, 1, 1, 4, 1, 1, 4, felt_texture)
-    draw_rect(x + 7, y + 4.5, z, 1, 1, 4, 1, 1, 4, felt_texture)
+    draw_rect(x, y + 4.5, z, 13, 1, 4, 26, 2, 8, felt_texture, False) # big center
+
+    draw_rect(x - 4, y + 4.5, z - 2.5, 5, 1, 1, 10, 1, 2, felt_texture, False)
+    draw_rect(x + 4, y + 4.5, z - 2.5, 5, 1, 1, 10, 1, 2, felt_texture, False)
+    draw_rect(x - 4, y + 4.5, z + 2.5, 5, 1, 1, 10, 1, 2, felt_texture, False)
+    draw_rect(x + 4, y + 4.5, z + 2.5, 5, 1, 1, 10, 1, 2, felt_texture, False)
+
+    draw_rect(x - 7, y + 4.5, z, 1, 1, 4, 1, 1, 4, felt_texture, False)
+    draw_rect(x + 7, y + 4.5, z, 1, 1, 4, 1, 1, 4, felt_texture, False)
 
     # wood bottom middle (19 x 1 x 6)
     set_wood_support_material(GL_FRONT)
-    draw_rect(x, y + 3.5, z, 19, 1, 10, 19, 1, 10, table_support_texture)
+    draw_rect(x, y + 3.5, z, 19, 1, 10, 19, 1, 10, table_support_texture, False)
 
     # wood legs (3 x 8 x 3)
     set_wood_support_material(GL_FRONT)
-    draw_rect(x - 6, y, z - 2.5, 3, 8, 3, 3, 8, 3, table_support_texture)
-    draw_rect(x + 6, y, z - 2.5, 3, 8, 3, 3, 8, 3, table_support_texture)
-    draw_rect(x - 6, y, z + 2.5, 3, 8, 3, 3, 8, 3, table_support_texture)
-    draw_rect(x + 6, y, z + 2.5, 3, 8, 3, 3, 8, 3, table_support_texture)
+    draw_rect(x - 6, y, z - 2.5, 3, 8, 3, 3, 8, 3, table_support_texture, False)
+    draw_rect(x + 6, y, z - 2.5, 3, 8, 3, 3, 8, 3, table_support_texture, False)
+    draw_rect(x - 6, y, z + 2.5, 3, 8, 3, 3, 8, 3, table_support_texture, False)
+    draw_rect(x + 6, y, z + 2.5, 3, 8, 3, 3, 8, 3, table_support_texture, False)
 
-def draw_textured_plane(x_size, y_size, x_slices, y_slices, texture):
+def draw_textured_plane(x_size, y_size, x_slices, y_slices, texture, stretch=True):
     """ Draw a textured plane of the specified dimensions on the xy-plane.
         The plane is a unit square with lower left corner at origin.
     """
@@ -1093,21 +1100,33 @@ def draw_textured_plane(x_size, y_size, x_slices, y_slices, texture):
         glBegin(GL_TRIANGLE_STRIP)
         cx = 0
         for i in range(x_slices):
-            glTexCoord2f(cx/x_size, (y+dy)/y_size)
+            if stretch:
+                glTexCoord2f(cx/x_size, (y+dy)/y_size)
+            else:
+                glTexCoord2f(cx, (y+dy))
             glVertex3f(cx, y+dy, 0)
-            glTexCoord2f(cx/x_size, y/y_size)
+            if stretch:
+                glTexCoord2f(cx/x_size, y/y_size)
+            else:
+                glTexCoord2f(cx, y)
             glVertex3f(cx, y, 0)
             cx += dx
-        glTexCoord2f(1, (y+dy)/y_size)
+        if stretch:
+            glTexCoord2f(1, (y+dy)/y_size)
+        else:
+            glTexCoord2f(x_size, (y+dy))
         glVertex3f(x_size, y+dy, 0)
-        glTexCoord2f(1, y/y_size)
+        if stretch:
+            glTexCoord2f(1, y/y_size)
+        else:
+            glTexCoord2f(x_size, y)
         glVertex3f(x_size, y, 0)
         glEnd()
         y += dy
    
     glDisable(GL_TEXTURE_2D)
 
-def draw_rect(x, y, z, x_size, y_size, z_size, x_slices, y_slices, z_slices, texture_name):
+def draw_rect(x, y, z, x_size, y_size, z_size, x_slices, y_slices, z_slices, texture_name, stretch=True):
     """ Draw a rectangle centered around (x, y, z) with size (x_size, y_size, z_size)."""  
     # move to cube location
     glPushMatrix()
@@ -1116,42 +1135,60 @@ def draw_rect(x, y, z, x_size, y_size, z_size, x_slices, y_slices, z_slices, tex
     # Draw side 1 (+z)
     glPushMatrix()
     glTranslate(-x_size/2, -y_size/2, z_size/2)
-    draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name)
+    if stretch:
+        draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name)
+    else:
+        draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name, False)
     glPopMatrix()
 
     # Draw side 2 (-z)
     glPushMatrix()
     glTranslate(x_size/2, -y_size/2, -z_size/2)
     glRotated(180, 0, 1, 0)
-    draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name)
+    if stretch:
+        draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name)
+    else:
+        draw_textured_plane(x_size, y_size, x_slices, y_slices, texture_name, False)
     glPopMatrix()
 
     # Draw side 3 (-x)
     glPushMatrix()
     glTranslate(-x_size/2, -y_size/2, -z_size/2)
     glRotatef(-90, 0, 1, 0)
-    draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name)
+    if stretch:
+        draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name)
+    else:
+        draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name, False)
     glPopMatrix()
 
     # Draw side 4 (+x)
     glPushMatrix()
     glTranslatef(x_size/2, -y_size/2, z_size/2)
     glRotatef(90, 0, 1, 0)
-    draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name)
+    if stretch:
+        draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name)
+    else:
+        draw_textured_plane(z_size, y_size, z_slices, y_slices, texture_name, False)
     glPopMatrix()
 
     # Draw side 5 (-y)
     glPushMatrix()
     glTranslatef(-x_size/2, -y_size/2, -z_size/2)
     glRotatef(90, 1, 0, 0)
-    draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name)
+    if stretch:
+        draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name)
+    else:
+        draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name, False)
     glPopMatrix()
 
     # Draw side 6 (+y)
     glPushMatrix()
     glTranslatef(-x_size/2, y_size/2, z_size/2)
     glRotatef(-90, 1, 0, 0)
-    draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name)
+    if stretch:
+        draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name)
+    else:
+        draw_textured_plane(x_size, z_size, x_slices, z_slices, texture_name, False)
     glPopMatrix()
 
     # return
@@ -1363,9 +1400,6 @@ def draw_corner(x, y, z):
 
     # black cylinder liner (inner)
 
-    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
-    glEnable(GL_TEXTURE_2D)
-
     dtheta = math.pi / 4
     theta = math.pi / 2
 
@@ -1391,7 +1425,123 @@ def draw_corner(x, y, z):
 
         prev = (vx, vz)
 
+    glPopMatrix()
+
+def draw_middle_hole(x, y, z):
+    glPushMatrix()
+
+    glTranslatef(x, y, z)
+
+    # wood section
+    set_wood_support_material(GL_FRONT)
+    glBindTexture(GL_TEXTURE_2D, table_support_texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    draw_rect(-1.25, 0, 1, 0.5, 1.5, 1, 1, 3, 2, table_support_texture, False) # left
+    draw_rect(1.25, 0, 1, 0.5, 1.5, 1, 1, 3, 2, table_support_texture, False) # right
+    draw_rect(0, 0, 1.375, 3, 1.5, 0.25, 12, 6, 4, table_support_texture, False) # back
+
+    # felt section
+    set_felt_material(GL_FRONT_AND_BACK)
+    glBindTexture(GL_TEXTURE_2D, felt_texture)
+    glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE) # try GL_DECAL/GL_REPLACE/GL_MODULATE
+    glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_FASTEST)           # try GL_NICEST/GL_FASTEST
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)  # try GL_CLAMP/GL_REPEAT/GL_CLAMP_TO_EDGE
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) # try GL_NEAREST/GL_LINEAR
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+
+    draw_rect(-1.25, 0, 0.375, 0.5, 1.5, 0.25, 2, 6, 1, felt_texture, False) # left box
+    draw_rect(1.25, 0, 0.375, 0.5, 1.5, 0.25, 2, 6, 1, felt_texture, False) # right box
+    draw_rect(0, -0.25, -1.125, 3, 1, 0.75, 12, 4, 3, felt_texture, False) # right box
+
+    # slope in on left
+    glPushMatrix()
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+    
+    glNormal3f(-0.5, 0, -0.75)
+
+    glBegin(GL_TRIANGLE_FAN)
+
+    glTexCoord2f(0, 0)
+    glVertex3f(-1, 0, 0.25)
+
+    glTexCoord2f(0, 1)
+    glVertex3f(-1, 0.75, 0.25)
+
+    glTexCoord2f(1, 1)
+    glVertex3f(-1.5, 0.75, -0.5)
+
+    glTexCoord2f(1, 0)
+    glVertex3f(-1.5, 0, -0.5)
+
+    glEnd()
+
     glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
+
+    # top left
+
+    glPushMatrix()
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+    
+    glNormal3f(-0.5, 0, -0.75)
+
+    # glBegin(GL_TRIANGLE_FAN)
+
+    # # glTexCoord2f(0, 0)
+    # # glVertex3f(-1, 0, 0.25)
+
+    # # glTexCoord2f(0, 1)
+    # # glVertex3f(-1, 0.75, 0.25)
+
+    # # glTexCoord2f(1, 1)
+    # # glVertex3f(-1.5, 0.75, -0.5)
+
+    # glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
+
+    # slope on right
+
+    glPushMatrix()
+
+    # Enable/Disable each time or OpenGL ALWAYS expects texturing!
+    glEnable(GL_TEXTURE_2D)
+    
+    glNormal3f(0.5, 0, -0.75)
+
+    glBegin(GL_TRIANGLE_FAN)
+
+    glTexCoord2f(0, 0)
+    glVertex3f(1, 0, 0.25)
+
+    glTexCoord2f(0, 1)
+    glVertex3f(1, 0.75, 0.25)
+
+    glTexCoord2f(1, 1)
+    glVertex3f(1.5, 0.75, -0.5)
+
+    glTexCoord2f(1, 0)
+    glVertex3f(1.5, 0, -0.5)
+
+    glEnd()
+
+    glDisable(GL_TEXTURE_2D)
+
+    glPopMatrix()
 
     glPopMatrix()
 
