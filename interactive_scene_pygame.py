@@ -28,7 +28,7 @@ CAM_NEAR = 0.01
 CAM_FAR = 1000.0
 CAM_ANGLE = 60.0
 
-# camera position at start
+# camera configuration at start
 start_camera_position = Point(0, 15, 35)
 
 # quadrics used for curved shapes
@@ -191,9 +191,9 @@ def main():
     init()
     global camera
     camera = Camera(CAM_ANGLE, window_dimensions[0]/window_dimensions[1], CAM_NEAR, CAM_FAR)
-    camera.eye = start_camera_position  # Position the camera
-    camera.look = Point(0, 0, 0)  # Look at the center of the scene
-    camera.up = Vector(Point(0, 1, 0))  # Set up vector
+    camera.eye = copy.deepcopy(start_camera_position)  # Position the camera
+    # camera.look = Point(0, 0, 0)  # Look at the center of the scene
+    # camera.up = Vector(Point(0, 1, 0))  # Set up vector
     camera.add_room_bounds(room_bounds) # Add bounding box for room
     camera.add_obstacle_bounding_boxes(obstacles) # Add bounding boxes for objects
 
@@ -468,6 +468,12 @@ def keyboard(event):
     key = event.key # "ASCII" value of the key pressed
     if key == 27:  # ASCII code 27 = ESC-key
         running = False
+    elif key == ord('r'):
+        # Reset the camera
+        camera.eye = copy.deepcopy(start_camera_position)
+        camera.lookAngle = 0
+        camera.pitchAngle = 0
+        camera.placeCamera()
     elif key == ord('w'):
         # Go forward
         camera.slide(0,0,-1)
@@ -1748,7 +1754,8 @@ def print_help_message():
     print("  A/D - Strafe left/right")
     print("  Q/E - Turn camera left/right")
     print("  Z/X - Tilt camera up/down")
-    print("  Current Camera:", camera)
+    print("  R   - Reset camera to home position")
+    # print("  Current Camera:", camera)
     
     print("\nLight Controls:")
     print("  0 - Toggle flashlight")
