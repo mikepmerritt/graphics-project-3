@@ -2126,6 +2126,12 @@ def print_help_message():
     print("\nInteraction Controls:")
     print("  G - Roll the dice")
     print("  F - Toggle hanging light swing")
+
+    print("\nPool Controls:")
+    print("  Space      - Toggle aiming / fire when aiming")
+    print("  Left/Right - Adjust angle")
+    print("  Up/Down    - Increase/decrease power")
+    print("  P          - Reset the pool minigame")
     
     print("\nSystem Controls:")
     print("  H - Show this help message")
